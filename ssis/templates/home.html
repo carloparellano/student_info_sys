@@ -1,10 +1,22 @@
 {% extends "layout.html" %}
 {% block content %}
-    <header> 
-        <img src={{url_for('static', filename='bcg.jpg')}} 
-        width = 100%>
-        <div style="text-align: center;"> 
-            <h1>Welcome back</h1>
+    <header style="position: relative;">
+        <img src="{{ url_for('static', filename='bcg.jpg') }}" width="100%">
+        <style>
+            @import url('https://fonts.googleapis.com/css?family=Raleway');
+
+            .custom-font {
+                font-family: 'Raleway', sans-serif;
+            }
+        </style>
+        <div 
+            style="
+            position: absolute; 
+            top: 10px; 
+            left: 50%; transform: 
+            translateX(-50%); 
+            text-align: center;">
+            <h1 style="font-size: 70px; color: #ebeaf6;" class="custom-font">Welcome back</h1>
         </div>
     </header>
 {% endblock content %}

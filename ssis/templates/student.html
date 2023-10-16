@@ -1,7 +1,52 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1>
-        Students {{ title }}
-    </h1>
+    <div class="container">
+        <h1>Student Information</h1>
+        <table class="table table-striped text-center">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Course Code</th>
+                    <th>Year Level</th>
+                    <th>Gender</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2021-7865</td>
+                    <td>John</td>
+                    <td>Doe</td>
+                    <td>CSCI101</td>
+                    <td>2</td>
+                    <td>Male</td>
+                    <td>
+                        <button class="btn btn-primary">Edit</button>
+                        <button class="btn btn-danger">Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2021-1234</td>
+                    <td>Jane</td>
+                    <td>Smith</td>
+                    <td>MATH202</td>
+                    <td>3</td>
+                    <td>Female</td>
+                    <td>
+                        <button class="btn btn-primary">Edit</button>
+                        <button class="btn btn-danger">Delete</button>
+                    </td>
+                </tr>
+                <!-- Add more rows as needed -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Include Bootstrap JS and jQuery (optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock content %}
