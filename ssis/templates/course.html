@@ -3,6 +3,22 @@
 {% block content %}
     <div class="container">
         <h1>Course Information</h1>
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search by name, ID, or course code" aria-label="Search" aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Button to Trigger Modal -->
+                <button class="btn btn-success btn-block" data-toggle="modal" data-target="#addCourseModal">Add Course</button>
+            </div>
+        </div>
+
         <table class="table table-striped text-center">
             <thead>
                 <tr>
@@ -35,4 +51,47 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Modal for Adding Course -->
+    <div class="modal" id="addCourseModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Course</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form for Adding Course Data -->
+                    <form>
+                        <div class="form-group">
+                            <label for="courseCode">Course Code</label>
+                            <input type="text" class="form-control" id="courseCode">
+                        </div>
+                        <div class="form-group">
+                            <label for="courseName">Course Name</label>
+                            <input type="text" class="form-control" id="courseName">
+                        </div>
+                        <div class="form-group">
+                            <label for="collegeCode">College Code</label>
+                            <input type="text" class="form-control" id="collegeCode">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Include Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock content %}

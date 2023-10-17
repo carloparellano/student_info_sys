@@ -3,6 +3,21 @@
 {% block content %}
     <div class="container">
         <h1>College Information</h1>
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Search by name, ID, or course code" aria-label="Search" aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Button to Trigger Modal -->
+                <button class="btn btn-success btn-block" data-toggle="modal" data-target="#addCollegeModal">Add College</button>
+            </div>
+        </div>
         <table class="table table-striped text-center">
             <thead>
                 <tr>
@@ -12,24 +27,57 @@
                 </tr>
             </thead>
             <tbody>
+                {% for college in colleges %}
                 <tr>
-                    <td>COL101</td>
-                    <td>College of Engineering</td>
+                    <td>{{ college.college_code }}</td>
+                    <td>{{ college.college_name}}</td>
                     <td>
                         <button class="btn btn-primary">Edit</button>
                         <button class="btn btn-danger">Delete</button>
                     </td>
                 </tr>
-                <tr>
-                    <td>COL202</td>
-                    <td>College of Arts and Sciences</td>
-                    <td>
-                        <button class="btn btn-primary">Edit</button>
-                        <button class="btn btn-danger">Delete</button>
-                    </td>
-                </tr>
+                {% endfor %}
                 <!-- Add more rows as needed -->
             </tbody>
         </table>
     </div>
+    
+    <!-- Modal for Adding College -->
+    <div class="modal" id="addCollegeModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <form method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add College</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Form for Adding College Data -->
+                            <div class="form-group">
+                                <label for="college_code">College Code</label>
+                                <input name="college_code" type="text" class="form-control" id="college_code">
+                            </div>
+                            <div class="form-group">
+                                <label for="college_name">College Name</label>
+                                <input name="college_name" type="text" class="form-control" id="college_name">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Save</button>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Include Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock content %}
