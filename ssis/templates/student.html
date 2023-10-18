@@ -1,3 +1,6 @@
+I've identified a few issues in your code and corrected them. Please see the revised code below:
+
+```html
 {% extends "layout.html" %}
 
 {% block content %}
@@ -5,7 +8,6 @@
         <h1>Student Information</h1>
 
         <div class="row">
-            <!-- Search Bar -->
             <div class="col-md-8 mb-3">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Search by name, ID, or course code" aria-label="Search" aria-describedby="basic-addon2">
@@ -20,7 +22,6 @@
                 <button class="btn btn-success btn-block" data-toggle="modal" data-target="#addStudentModal">Add Student</button>
             </div>
         </div>
-
         <table class="table table-striped text-center">
             <thead>
                 <tr>
@@ -34,30 +35,20 @@
                 </tr>
             </thead>
             <tbody>
+                {% for student in students %}
                 <tr>
-                    <td>2021-7865</td>
-                    <td>John</td>
-                    <td>Doe</td>
-                    <td>CSCI101</td>
-                    <td>2</td>
-                    <td>Male</td>
+                    <td>{{ student.student_id }}</td>
+                    <td>{{ student.first_name }}</td>
+                    <td>{{ student.last_name }}</td>
+                    <td>{{ student.course_code }}</td>
+                    <td>{{ student.year_level }}</td>
+                    <td>{{ student.gender }}</td>
                     <td>
                         <button class="btn btn-primary">Edit</button>
                         <button class="btn btn-danger">Delete</button>
                     </td>
                 </tr>
-                <tr>
-                    <td>2021-1234</td>
-                    <td>Jane</td>
-                    <td>Smith</td>
-                    <td>MATH202</td>
-                    <td>3</td>
-                    <td>Female</td>
-                    <td>
-                        <button class="btn btn-primary">Edit</button>
-                        <button class="btn btn-danger">Delete</button>
-                    </td>
-                </tr>
+                {% endfor %}
                 <!-- Add more rows as needed -->
             </tbody>
         </table>
@@ -66,50 +57,50 @@
     <!-- Modal for Adding Student -->
     <div class="modal" id="addStudentModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Student</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Form for Adding Student Data -->
-                    <form>
+            <form method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Student</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Form for Adding Student Data -->
                         <div class="form-group">
-                            <label for="studentID">Student ID</label>
-                            <input type="text" class="form-control" id="studentID">
+                            <label for="student_id">Student ID</label>
+                            <input name="student_id" type="text" class="form-control" id="student_id">
                         </div>
                         <div class="form-group">
-                            <label for="firstName">First Name</label>
-                            <input type="text" class="form-control" id="firstName">
+                            <label for="first_name">First Name</label>
+                            <input name="first_name" type="text" class="form-control" id="first_name">
                         </div>
                         <div class="form-group">
-                            <label for="lastName">Last Name</label>
-                            <input type="text" class="form-control" id="lastName">
+                            <label for="last_name">Last Name</label>
+                            <input name="last_name" type="text" class="form-control" id="last_name">
                         </div>
                         <div class="form-group">
-                            <label for="courseCode">Course Code</label>
-                            <input type="text" class="form-control" id="courseCode">
+                            <label for="course_code">Course Code</label>
+                            <input name="course_code" type="text" class="form-control" id="course_code">
                         </div>
                         <div class="form-group">
-                            <label for="yearLevel">Year Level</label>
-                            <input type="text" class="form-control" id="yearLevel">
+                            <label for="year_level">Year Level</label>
+                            <input name="year_level" type="text" class="form-control" id="year_level">
                         </div>
                         <div class="form-group">
                             <label for="gender">Gender</label>
-                            <select class="form-control" id="gender">
+                            <select name="gender" class="form-control" id="gender">
                                 <option>Male</option>
                                 <option>Female</option>
                             </select>
                         </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success">Save</button>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success">Save</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -120,4 +111,6 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</div>
 {% endblock content %}
+
