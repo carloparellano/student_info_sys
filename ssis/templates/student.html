@@ -1,25 +1,19 @@
-I've identified a few issues in your code and corrected them. Please see the revised code below:
-
-```html
 {% extends "layout.html" %}
 
 {% block content %}
     <div class="container">
-        <h1>Student Information</h1>
-
-        <div class="row">
-            <div class="col-md-8 mb-3">
+        <h1 class="mb-4">Student Information</h1>
+        <div class="row mb-4">
+            <div class="col-9">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search by name, ID, or course code" aria-label="Search" aria-describedby="basic-addon2">
+                    <input type="text" class="form-control" placeholder="Search by student name or student code" aria-label="Search" aria-describedby="basic-addon2">
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="button">Search</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Add Student Button -->
-            <div class="col-md-4">
-                <button class="btn btn-success btn-block" data-toggle="modal" data-target="#addStudentModal">Add Student</button>
+            <div class="col-3">
+                <button class="btn btn-success w-100 btn-block" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
             </div>
         </div>
         <table class="table table-striped text-center">
@@ -44,26 +38,38 @@ I've identified a few issues in your code and corrected them. Please see the rev
                     <td>{{ student.year_level }}</td>
                     <td>{{ student.gender }}</td>
                     <td>
-                        <button class="btn btn-primary">Edit</button>
-                        <button class="btn btn-danger">Delete</button>
+                        <button 
+                            id="update-student"
+                            class="btn btn-primary"
+                            data-student-id="{{ student.student_id }}"
+                            data-first-name="{{ student.first_name }}"
+                            data-last-name="{{ student.last_name }}"
+                            data-course-code="{{ student.course_code }}"
+                            data-year-level="{{ student.year_level }}"
+                            data-gender="{{ student.gender }}"
+                            >Edit</button>
+
+                        <button
+                        data-student-id="{{ student.student_id }}"
+                        id="confirmDeleteButton" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            Delete
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
-                <!-- Add more rows as needed -->
             </tbody>
         </table>
     </div>
+    
 
     <!-- Modal for Adding Student -->
-    <div class="modal" id="addStudentModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <form method="post">
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <form method="post">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add Student</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <h1 class="modal-title fs-5" id="addStudentModalLabel">Add Student</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <!-- Form for Adding Student Data -->
@@ -80,16 +86,28 @@ I've identified a few issues in your code and corrected them. Please see the rev
                             <input name="last_name" type="text" class="form-control" id="last_name">
                         </div>
                         <div class="form-group">
-                            <label for="course_code">Course Code</label>
-                            <input name="course_code" type="text" class="form-control" id="course_code">
-                        </div>
+                            <label for="course_code">Course</label>
+                            <select name="course_code" class="form-control" id="course_code" required>
+                                <option value="" disabled selected>--Select Course Code--</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.course_code }}">{{ course.course_code }}</option>
+                                {% endfor %}
+                            </select>   
+                        </div>                     
                         <div class="form-group">
                             <label for="year_level">Year Level</label>
-                            <input name="year_level" type="text" class="form-control" id="year_level">
+                            <select name="year_level" class="form-control" id="year_level">
+                                <option value="" disabled selected>--Select Year Level--</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="gender">Gender</label>
                             <select name="gender" class="form-control" id="gender">
+                                <option value="" disabled selected>--Select Gender--</option>
                                 <option>Male</option>
                                 <option>Female</option>
                             </select>
@@ -100,17 +118,146 @@ I've identified a few issues in your code and corrected them. Please see the rev
                         <button type="submit" class="btn btn-success">Save</button>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 
-    <!-- Include Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Modal for Updating Student -->
+    <div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <form method="post">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="updateStudentModalLabel">Update Student</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="student_id">Student ID</label>
+                            <input name="student_id" type="text" class="form-control" id="student_id">
+                        </div>
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input name="first_name" type="text" class="form-control" id="first_name">
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input name="last_name" type="text" class="form-control" id="last_name">
+                        </div>
+                        <div class="form-group">
+                            <label for="uodated_course_code">Course</label>
+                            <select name="uodated_course_code" class="form-control" id="uodated_course_code" required>
+                                <option value="" disabled selected>--Select Course Code--</option>
+                                {% for course in courses %}
+                                    <option value="{{ course.course_code }}">{{ course.course_code }}</option>
+                                {% endfor %}
+                            </select>   
+                        </div>                     
+                        <div class="form-group">
+                            <label for="year_level">Year Level</label>
+                            <select name="year_level" class="form-control" id="year_level">
+                                <option value="" disabled selected>--Select Year Level--</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select name="gender" class="form-control" id="gender">
+                                <option value="" disabled selected>--Select Gender--</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success">Save</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
-    <!-- Include Bootstrap JS and jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</div>
+
+    <!-- Modal for Deleting Student -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Student</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                <p>
+                    Are you sure you want to delete this?
+                </p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="confirmDeleteButton" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="deleteStudent()">
+                Delete
+                </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            populateDeleteCode()
+        })
+
+        const deleteModal = document.getElementById("deleteModal");
+        const deleteAnywayButton = deleteModal.querySelector(".btn-danger");
+
+        function populateDeleteCode() {
+            const deleteButtons = document.querySelectorAll("#confirmDeleteButton");
+            deleteButtons.forEach((button) => {
+                const studentid = button.dataset.studentId;
+                button.addEventListener("click", () => {
+                    deleteAnywayButton.dataset.studentId = studentid;
+                });
+            });
+        }
+
+        function deleteStudent() {
+            const studentid = deleteAnywayButton.dataset.studentId;
+            fetch("/student/delete/" + studentid, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload()
+                }
+            })
+        }
+
+            const updateModalDiv = document.getElementById("updateStudentModal");
+            var updateModal = new bootstrap.Modal(updateModalDiv, {});
+        
+            const updateButtons = document.querySelectorAll("#update-student");
+            updateButtons.forEach((button) => {
+                const studentid = button.dataset.studentId;
+                const firstName = button.dataset.firstName;
+                const lastName = button.dataset.lastName;
+                const courseCode = button.dataset.courseCode;
+                const yearLevel = button.dataset.yearLevel;
+                const gender = button.dataset.gender;
+                button.addEventListener("click", () => {
+                    updateModal.show();
+                    updateModalDiv.querySelector("form").action = "/student/update/" + studentid;
+                    updateModalDiv.querySelector("input[name='student_id']").value = studentid;
+                    updateModalDiv.querySelector("input[name='first_name']").value = firstName;
+                    updateModalDiv.querySelector("input[name='last_name']").value = lastName;
+                    
+                    document.getElementById("uodated_course_code").value = courseCode;
+        
+                    updateModalDiv.querySelector("#year_level").value = yearLevel;
+                    updateModalDiv.querySelector("#gender").value = gender;
+                });
+            });
+    </script>
 {% endblock content %}
-

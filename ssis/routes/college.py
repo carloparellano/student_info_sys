@@ -1,9 +1,10 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify, redirect
 from flask import render_template
 from ssis import mysql
 
 college_bp = Blueprint('college', __name__)
 
+# Add College
 @college_bp.route('/', methods=["GET", "POST"])
 def college_dashboard():
     if request.method == "POST":
@@ -16,5 +17,25 @@ def college_dashboard():
     cur = mysql.new_cursor(dictionary=True)
     cur.execute("SELECT * FROM college")
     colleges = cur.fetchall()
-         
     return render_template("college.html", colleges=colleges)
+
+
+# Update College
+@college_bp.route('/update/<college_code>', methods=["POST"])
+def update_college(college_code):
+    _college_code = request.form.get("college_code")
+    college_name = request.form.get("college_name")
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE college SET college_code = %s, college_name = %s WHERE college_code = %s", (_college_code, college_name, college_code,))
+    mysql.connection.commit()
+    return redirect('/college/')
+
+# Delete College
+@college_bp.route('/delete/<college_code>', methods=["DELETE"])
+def delete_college(college_code):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM college WHERE college_code = %s", (college_code,))
+    mysql.connection.commit()
+    return jsonify({ "success": True })
+    
+    
