@@ -145,9 +145,9 @@
                             <input name="last_name" type="text" class="form-control" id="last_name">
                         </div>
                         <div class="form-group">
-                            <label for="uodated_course_code">Course</label>
-                            <select name="uodated_course_code" class="form-control" id="uodated_course_code" required>
-                                <option value="" disabled selected>--Select Course Code--</option>
+                            <label for="course_code">Course</label>
+                            <select name="course_code" class="form-control" id="course_code" required>
+                                <option value="" disabled>--Select Course Code--</option>
                                 {% for course in courses %}
                                     <option value="{{ course.course_code }}">{{ course.course_code }}</option>
                                 {% endfor %}
@@ -156,19 +156,19 @@
                         <div class="form-group">
                             <label for="year_level">Year Level</label>
                             <select name="year_level" class="form-control" id="year_level">
-                                <option value="" disabled selected>--Select Year Level--</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
+                                <option value="" disabled>--Select Year Level--</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="gender">Gender</label>
                             <select name="gender" class="form-control" id="gender">
-                                <option value="" disabled selected>--Select Gender--</option>
-                                <option>Male</option>
-                                <option>Female</option>
+                                <option value="" disabled>--Select Gender--</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                             </select>
                         </div>
                     </div>
@@ -252,11 +252,27 @@
                     updateModalDiv.querySelector("input[name='student_id']").value = studentid;
                     updateModalDiv.querySelector("input[name='first_name']").value = firstName;
                     updateModalDiv.querySelector("input[name='last_name']").value = lastName;
-                    
-                    document.getElementById("uodated_course_code").value = courseCode;
-        
-                    updateModalDiv.querySelector("#year_level").value = yearLevel;
-                    updateModalDiv.querySelector("#gender").value = gender;
+                    const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
+                    for (const option of courseSelect.options) {
+                        if (option.value === courseCode) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                    const yearLevelSelect = updateModalDiv.querySelector("select[name='year_level']")
+                    for (const option of yearLevelSelect.options) {
+                        if (option.value === yearLevel) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                    const genderSelect = updateModalDiv.querySelector("select[name='gender']")
+                    for (const option of genderSelect.options) {
+                        if (option.value === gender) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
                 });
             });
     </script>

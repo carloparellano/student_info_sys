@@ -31,10 +31,11 @@ def update_student(student_id):
     new_student_id = request.form.get("student_id")
     first_name = request.form.get("first_name")
     last_name = request.form.get("last_name")
-    course_code = request.form.get("uodated_course_code")
+    course_code = request.form.get("course_code")
     year_level = request.form.get("year_level")
     gender = request.form.get("gender")
     cur = mysql.connection.cursor()
+    print(f"UPDATE student SET student_id = {new_student_id}, first_name = {first_name}, last_name = {last_name}, course_code = {course_code}, year_level = {year_level}, gender = {gender} WHERE student = {student_id}")
     cur.execute("UPDATE student SET student_id = %s, first_name = %s, last_name = %s, course_code = %s, year_level = %s, gender = %s WHERE student_id = %s",
                 (new_student_id, first_name, last_name, course_code, year_level, gender,student_id,))
     mysql.connection.commit()
