@@ -5,12 +5,12 @@
     <h1 class="mb-4">Course Information</h1>
     <div class="row mb-4">
         <div class="col-9">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search by course code, course name or college code" aria-label="Search" aria-describedby="basic-addon2">
+            <form action="{{ url_for('course.course_search') }}" method="GET" class="input-group">
+                <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2" value="{{query}}">
                 <div class="input-group-append">
-                    <button class="btn btn-primary" type="button">Search</button>
+                    <button class="btn btn-primary" type="submit">Search</button>
                 </div>
-            </div>
+            </form>
         </div>
         <div class="col-3">
             <button class="btn btn-success w-100 btn-block" data-bs-toggle="modal" data-bs-target="#addCourseModal">Add Course</button>
@@ -190,7 +190,13 @@
                 updateModalDiv.querySelector("form").action = "/course/update/" + courseCode;
                 updateModalDiv.querySelector("input[name='course_code']").value = courseCode; 
                 updateModalDiv.querySelector("input[name='course_name']").value = courseName; 
-                updateModalDiv.querySelector("input[name='college_code']").value = collegeCode; 
+                const collegeSelect = updateModalDiv.querySelector("select[name='college_code']")
+                    for (const option of collegeSelect.options) {
+                        if (option.value === collegeCode) {
+                            option.selected = true;
+                            break;
+                        }
+                    } 
             })
         });
     </script>

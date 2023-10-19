@@ -37,5 +37,16 @@ def delete_college(college_code):
     cur.execute("DELETE FROM college WHERE college_code = %s", (college_code,))
     mysql.connection.commit()
     return jsonify({ "success": True })
-    
-    
+
+# Search College
+@college_bp.route('/search/', methods=['GET'])
+def college_search():
+    query = request.args.get("query")
+    if query:
+        cur = mysql.new_cursor(dictionary=True)
+        cur.execute("SELECT * FROM college WHERE college_code LIKE %s OR college_name LIKE %s", (f"%{query}%", f"%{query}%"))
+        colleges = cur.fetchall()
+        return render_template("college.html", colleges=colleges, query=query)
+    else:
+        # If no search query is provided, handle this case according to your application logic
+        return redirect('/college/')
