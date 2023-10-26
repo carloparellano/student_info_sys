@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 flask = "==2.3.3"
 flask-mysql-connector = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
