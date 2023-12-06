@@ -1,7 +1,8 @@
-from flask import Blueprint, request, render_template, jsonify, redirect
+from flask import Blueprint, request, render_template, jsonify, redirect, flash
 from ssis import mysql
 
 student_bp = Blueprint('student', __name__)
+
 
 @student_bp.route('/', methods=["GET", "POST"])
 def student_dashboard():
@@ -12,10 +13,20 @@ def student_dashboard():
         course_code = request.form.get("course_code")
         year_level = request.form.get("year_level")
         gender = request.form.get("gender")
+        
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO student (student_id, first_name, last_name, course_code, year_level, gender) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (student_id, first_name, last_name, course_code, year_level, gender))
-        mysql.connection.commit()
+        cur.execute("SELECT * FROM student WHERE student_id = %s", (student_id,))
+        existing_student = cur.fetchone()
+        
+        if existing_student:
+            flash("The ID number is already existed")
+            # Student with the same ID already exists, handle accordingly
+            return render_template("layout.html", student=existing_student)
+        else:
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO student (student_id, first_name, last_name, course_code, year_level, gender) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (student_id, first_name, last_name, course_code, year_level, gender))
+            mysql.connection.commit()
 
     cur = mysql.new_cursor(dictionary=True)
     cur.execute("SELECT * FROM student")
@@ -25,6 +36,7 @@ def student_dashboard():
     course_cur.execute("SELECT * FROM course")
     courses = course_cur.fetchall()
     return render_template("student.html", students=students, courses=courses)
+
 
 @student_bp.route('/update/<student_id>', methods=["POST"])
 def update_student(student_id):
