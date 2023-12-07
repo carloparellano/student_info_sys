@@ -16,7 +16,7 @@ def college_dashboard():
         existing_college = cur.fetchone()
 
         if existing_college:
-            flash("College with the same code already exists.", "danger")
+            flash("College is Already Existed", "danger")
         else:
             cur.execute("INSERT INTO college (college_code, college_name) VALUES (%s, %s)", (college_code, college_name))
             mysql.connection.commit()

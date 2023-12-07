@@ -19,9 +19,7 @@ def student_dashboard():
         existing_student = cur.fetchone()
         
         if existing_student:
-            flash("The ID number is already existed")
-            # Student with the same ID already exists, handle accordingly
-            return render_template("layout.html", student=existing_student)
+            flash("The ID Number is Already Existed", "danger")
         else:
             cur = mysql.connection.cursor()
             cur.execute("INSERT INTO student (student_id, first_name, last_name, course_code, year_level, gender) VALUES (%s, %s, %s, %s, %s, %s)",
