@@ -1,8 +1,13 @@
-from flask import Blueprint, request, render_template, jsonify, redirect, flash
+from flask import Blueprint, request, render_template, jsonify, flash, redirect
 from ssis import mysql
+from cloudinary.uploader import upload
 
 student_bp = Blueprint('student', __name__)
 
+
+from flask import request, flash, render_template, jsonify
+
+# Assuming `upload` and `mysql` are properly imported and configured
 
 @student_bp.route('/', methods=["GET", "POST"])
 def student_dashboard():
@@ -13,28 +18,54 @@ def student_dashboard():
         course_code = request.form.get("course_code")
         year_level = request.form.get("year_level")
         gender = request.form.get("gender")
-        
+        # student_url = request.form.get("student_url")
+
+        # Handle image upload
+        student_url = upload_student_image()
+
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM student WHERE student_id = %s", (student_id,))
         existing_student = cur.fetchone()
-        
+
         if existing_student:
             flash("The ID Number is Already Existed", "danger")
         else:
-            cur = mysql.connection.cursor()
-            cur.execute("INSERT INTO student (student_id, first_name, last_name, course_code, year_level, gender) VALUES (%s, %s, %s, %s, %s, %s)",
-                        (student_id, first_name, last_name, course_code, year_level, gender))
+            cur.execute("INSERT INTO student (student_id, first_name, last_name, course_code, year_level, gender, student_url) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                        (student_id, first_name, last_name, course_code, year_level, gender, student_url))
             mysql.connection.commit()
 
     cur = mysql.new_cursor(dictionary=True)
     cur.execute("SELECT * FROM student")
     students = cur.fetchall()
-    
+
     course_cur = mysql.new_cursor(dictionary=True)
     course_cur.execute("SELECT * FROM course")
     courses = course_cur.fetchall()
+
     return render_template("student.html", students=students, courses=courses)
 
+
+def upload_student_image():
+    file = request.files.get('upload')
+
+    if not file:
+        print("No file selected.")
+        return
+    
+    # Upload the file to Cloudinary
+    result = upload(file)
+    print(result)
+
+    # Access the uploaded image URL
+    image_url = result['secure_url']
+    print(result['secure_url'])
+
+    return image_url
+    # Update the shop's image URL in the database
+    # return jsonify({
+    #     'is_success': True,
+    #     'url': image_url
+    # })
 
 @student_bp.route('/update/<student_id>', methods=["POST"])
 def update_student(student_id):

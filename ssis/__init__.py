@@ -10,7 +10,12 @@ app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 mysql = MySQL(app)
 
-
+import cloudinary
+cloudinary.config(
+        cloud_name='dwhasp9x4',
+        api_key='749517852535723',
+        api_secret='7m-um2rwaKtIDs-BYnsuNulo34A',
+    )
 
 
 def create_app():
