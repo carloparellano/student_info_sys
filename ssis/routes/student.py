@@ -18,7 +18,9 @@ def student_dashboard():
         course_code = request.form.get("course_code")
         year_level = request.form.get("year_level")
         gender = request.form.get("gender")
-        student_url = request.form.get("upload_student_image")
+        student_url = request.form.get("student_url")
+
+        print(f"Student URL: {student_url}")
 
         # Handle image upload
         # student_url = upload_student_image()

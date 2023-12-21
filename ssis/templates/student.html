@@ -149,7 +149,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <input name="upload_student_image" type="hidden">
                         <div class="form-group">
                             <label for="student_id">Student ID</label>
                             <input name="student_id" type="text" class="form-control" id="student_id">
@@ -310,7 +309,8 @@
                 const data = await response.json();
 
                 if (data && data.is_success) {
-                    const studentImageUrlInput = document.querySelector("[name='upload_student_image']");
+                    const studentImageUrlInput = document.querySelector("[name='student_url']");
+                    console.log(data.url)
                     studentImageUrlInput.value = data.url;
                 }
 
@@ -318,7 +318,7 @@
 
                 reader.onload = function (e) {
                     preview.src = e.target.result;
-                    submitButton.style.display = 'block'; // Show the submit button
+                   
                 };
 
                 reader.readAsDataURL(file);
