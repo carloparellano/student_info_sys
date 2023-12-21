@@ -27,6 +27,7 @@
         <table class="table table-striped text-center">
             <thead>
                 <tr>
+                    <th>Profie Picture</th>
                     <th>ID</th>
                     <th>First Name</th>
                     <th>Last Name</th>
@@ -55,6 +56,7 @@
                             data-course-code="{{ student.course_code }}"
                             data-year-level="{{ student.year_level }}"
                             data-gender="{{ student.gender }}"
+                            data-student-url="{{ student.student_url }}"
                             >Edit</button>
 
                         <button
@@ -83,11 +85,11 @@
                         <!-- Form for Adding Student Data -->
                         <div class="image-wrapper" style="width: 200px; height: 200px; position: relative; left: 50%; transform: translateX(-50%); border-radius: 50%; border: solid rgba(191, 94, 29, 0.523); overflow: hidden;">
                             <label for="file-input" style="cursor: pointer; display: block; width: 100%; height: 100%;">
-                                <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="add" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
                                 <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
                             </label>
-                            <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="previewImage(event)" required>
-                            <input id="student_url" name="student_url" hidden />
+                            <input type="file" id="file-input" name="add_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'add')" required>
+                            <input id="student_url" data-form-type="add" name="student_url" hidden />
                         </div>
 
                         <div class="form-group">
@@ -149,12 +151,12 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="image-wrapper" style="width: 200px; height: 200px; position: relative; left: 50%; transform: translateX(-50%); border-radius: 50%; border: solid rgba(191, 94, 29, 0.523); overflow: hidden;">
-                        <label for="file-input" style="cursor: pointer; display: block; width: 100%; height: 100%;">
-                            <img src="{{ students.student_dashboard }}" alt="Shop Photo" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
+                        <label for="file-input-update" style="cursor: pointer; display: block; width: 100%; height: 100%;">
+                            <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="update" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
                             <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
                         </label>
-                        <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="previewImage(event)" required>
-                        <input id="student_url" name="student_url" hidden />
+                        <input type="file" id="file-input-update" name="update_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'update')" required>
+                        <input id="student_url" data-form-type="update" name="student_url" hidden />
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -260,12 +262,13 @@
             })
         }
 
-        const preview = document.getElementById('preview-image');
+        
         const submitButton = document.getElementById('submit-button');
         const updateModalDiv = document.getElementById("updateStudentModal");
         const updateModal = new bootstrap.Modal(updateModalDiv, {});
         
-        async function previewImage(event) {    
+        async function previewImage(event, type) {    
+            const preview = document.querySelector(`img[id='preview-image'][data-form-type='${type}']`);
             const file = event.target.files[0];
             const formData = new FormData();
             formData.append("upload", file);
@@ -278,7 +281,7 @@
             const data = await response.json();
         
             if (data && data.is_success) {
-                const studentImageUrlInput = document.querySelector("[name='student_url']");
+                const studentImageUrlInput = document.querySelector(`input[name='student_url'][data-form-type='${type}']`);
                 studentImageUrlInput.value = data.url;
             }
         
@@ -300,7 +303,7 @@
             const courseCode = button.dataset.courseCode;
             const yearLevel = button.dataset.yearLevel;
             const gender = button.dataset.gender;
-            const student_url = button.dataset.student_url;
+            const student_url = button.dataset.studentUrl;
         
             button.addEventListener("click", () => {
                 updateModal.show();
@@ -308,8 +311,9 @@
                 updateModalDiv.querySelector("input[name='student_id']").value = studentid;
                 updateModalDiv.querySelector("input[name='first_name']").value = firstName;
                 updateModalDiv.querySelector("input[name='last_name']").value = lastName;
-                updateModalDiv.querySelector("input[name='student_url']").value = student_url
-        
+                updateModalDiv.querySelector("input[name='student_url']").value = student_url;
+                
+                document.querySelector("img[id='preview-image'][data-form-type='update']").src = student_url;
                 const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
                 for (const option of courseSelect.options) {
                     if (option.value === courseCode) {

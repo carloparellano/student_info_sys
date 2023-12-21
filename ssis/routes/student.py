@@ -58,8 +58,22 @@ def upload_student_image():
     file = request.files.get('upload')
 
     if not file:
-        print("No file selected.")
-        return
+        return jsonify({
+            'is_success': False,
+            'error': 'Missing file'
+        })
+
+    size = len(file.read())
+    file.seek(0)
+
+    one_mb = 1000 * 1000
+
+    if size > one_mb:
+        flash("Image is too large.", "error")
+        return jsonify({
+            'is_success': False,
+            'error': 'File too large'
+        }), 413
     
     # Upload the file to Cloudinary
     result = upload(file)
@@ -86,9 +100,9 @@ def update_student(student_id):
     gender = request.form.get("gender")
     student_url = request.form.get("student_url")
     cur = mysql.connection.cursor()
-    print(f"UPDATE student SET student_id = {new_student_id}, first_name = {first_name}, last_name = {last_name}, course_code = {course_code}, year_level = {year_level}, gender = {gender}, student_url = student_url WHERE student = {student_id}")
-    cur.execute("UPDATE student SET student_id = %s, first_name = %s, last_name = %s, course_code = %s, year_level = %s, gender = %s WHERE student_id = %s",
-                (new_student_id, first_name, last_name, course_code, year_level, gender,student_id, student_url))
+    print(f"UPDATE student SET student_id = {new_student_id}, first_name = {first_name}, last_name = {last_name}, course_code = {course_code}, year_level = {year_level}, gender = {gender}, student_url = {student_url} WHERE student = {student_id}")
+    cur.execute("UPDATE student SET student_id = %s, first_name = %s, last_name = %s, course_code = %s, year_level = %s, gender = %s, student_url = %s WHERE student_id = %s",
+            (new_student_id, first_name, last_name, course_code, year_level, gender, student_url, student_id))
     mysql.connection.commit()
     return redirect('/student/')
 
