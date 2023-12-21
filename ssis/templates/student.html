@@ -40,6 +40,7 @@
             <tbody>
                 {% for student in students %}
                 <tr>
+                    <td><img src="{{ student.student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover;"></td>
                     <td>{{ student.student_id }}</td>
                     <td>{{ student.first_name }}</td>
                     <td>{{ student.last_name }}</td>
@@ -267,31 +268,46 @@
         const updateModalDiv = document.getElementById("updateStudentModal");
         const updateModal = new bootstrap.Modal(updateModalDiv, {});
         
-        async function previewImage(event, type) {    
+        async function previewImage(event, type) {
             const preview = document.querySelector(`img[id='preview-image'][data-form-type='${type}']`);
             const file = event.target.files[0];
             const formData = new FormData();
             formData.append("upload", file);
         
-            const response = await fetch("{{ url_for('student.upload_student_image') }}", {
-                method: "POST",
-                body: formData,
-            });
+            try {
+                const response = await fetch("{{ url_for('student.upload_student_image') }}", {
+                    method: "POST",
+                    body: formData,
+                });
         
-            const data = await response.json();
+                if (!response.ok) {
+                    if (response.status === 413) {
+                        // Handle 413 (Payload Too Large) error
+                        alert("Image is too large.");
+                        // You can show an alert to the user or take other appropriate actions
+                    } else {
+                        alert("An error occurred while uploading the image.");
+                    }
+                    return;
+                }
         
-            if (data && data.is_success) {
-                const studentImageUrlInput = document.querySelector(`input[name='student_url'][data-form-type='${type}']`);
-                studentImageUrlInput.value = data.url;
+                const data = await response.json();
+        
+                if (data && data.is_success) {
+                    const studentImageUrlInput = document.querySelector(`input[name='student_url'][data-form-type='${type}']`);
+                    studentImageUrlInput.value = data.url;
+                }
+        
+                const reader = new FileReader();
+        
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                };
+        
+                reader.readAsDataURL(file);
+            } catch (error) {
+                alert("An unexpected error occurred: " + error.message);
             }
-        
-            const reader = new FileReader();
-        
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-            };
-        
-            reader.readAsDataURL(file);
         }
         
         const updateButtons = document.querySelectorAll("#update-student");
