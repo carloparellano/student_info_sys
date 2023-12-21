@@ -292,6 +292,7 @@
         }
         
         const updateButtons = document.querySelectorAll("#update-student");
+        
         updateButtons.forEach((button) => {
             const studentid = button.dataset.studentId;
             const firstName = button.dataset.firstName;
@@ -307,6 +308,7 @@
                 updateModalDiv.querySelector("input[name='student_id']").value = studentid;
                 updateModalDiv.querySelector("input[name='first_name']").value = firstName;
                 updateModalDiv.querySelector("input[name='last_name']").value = lastName;
+                updateModalDiv.querySelector("input[name='student_url']").value = student_url
         
                 const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
                 for (const option of courseSelect.options) {
