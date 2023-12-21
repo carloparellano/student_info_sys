@@ -46,6 +46,13 @@ def student_dashboard():
 
     return render_template("student.html", students=students, courses=courses)
 
+# @staticmethod   
+# def student_detail(student_id):
+#         cursor = mysql.connection.cursor(dictionary=True)
+#         cursor.execute("SELECT * FROM students WHERE student_id = %s", (student_id,))
+#         shop_data = cursor.fetchone()
+#         return shop_data
+
 @student_bp.route('/upload_shop_image', methods=['POST'])
 def upload_student_image():
     file = request.files.get('upload')
@@ -77,10 +84,11 @@ def update_student(student_id):
     course_code = request.form.get("course_code")
     year_level = request.form.get("year_level")
     gender = request.form.get("gender")
+    student_url = request.form.get("student_url")
     cur = mysql.connection.cursor()
-    print(f"UPDATE student SET student_id = {new_student_id}, first_name = {first_name}, last_name = {last_name}, course_code = {course_code}, year_level = {year_level}, gender = {gender} WHERE student = {student_id}")
+    print(f"UPDATE student SET student_id = {new_student_id}, first_name = {first_name}, last_name = {last_name}, course_code = {course_code}, year_level = {year_level}, gender = {gender}, student_url = student_url WHERE student = {student_id}")
     cur.execute("UPDATE student SET student_id = %s, first_name = %s, last_name = %s, course_code = %s, year_level = %s, gender = %s WHERE student_id = %s",
-                (new_student_id, first_name, last_name, course_code, year_level, gender,student_id,))
+                (new_student_id, first_name, last_name, course_code, year_level, gender,student_id, student_url))
     mysql.connection.commit()
     return redirect('/student/')
 

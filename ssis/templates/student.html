@@ -148,6 +148,14 @@
                         <h1 class="modal-title fs-5" id="updateStudentModalLabel">Update Student</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    <div class="image-wrapper" style="width: 200px; height: 200px; position: relative; left: 50%; transform: translateX(-50%); border-radius: 50%; border: solid rgba(191, 94, 29, 0.523); overflow: hidden;">
+                        <label for="file-input" style="cursor: pointer; display: block; width: 100%; height: 100%;">
+                            <img src="{{ students.student_dashboard }}" alt="Shop Photo" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
+                        </label>
+                        <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="previewImage(event)" required>
+                        <input id="student_url" name="student_url" hidden />
+                    </div>
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="student_id">Student ID</label>
@@ -252,78 +260,80 @@
             })
         }
 
-            const updateModalDiv = document.getElementById("updateStudentModal");
-            var updateModal = new bootstrap.Modal(updateModalDiv, {});
+        const preview = document.getElementById('preview-image');
+        const submitButton = document.getElementById('submit-button');
+        const updateModalDiv = document.getElementById("updateStudentModal");
+        const updateModal = new bootstrap.Modal(updateModalDiv, {});
         
-            const updateButtons = document.querySelectorAll("#update-student");
-            updateButtons.forEach((button) => {
-                const studentid = button.dataset.studentId;
-                const firstName = button.dataset.firstName;
-                const lastName = button.dataset.lastName;
-                const courseCode = button.dataset.courseCode;
-                const yearLevel = button.dataset.yearLevel;
-                const gender = button.dataset.gender;
-                button.addEventListener("click", () => {
-                    updateModal.show();
-                    updateModalDiv.querySelector("form").action = "/student/update/" + studentid;
-                    updateModalDiv.querySelector("input[name='student_id']").value = studentid;
-                    updateModalDiv.querySelector("input[name='first_name']").value = firstName;
-                    updateModalDiv.querySelector("input[name='last_name']").value = lastName;
-                    const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
-                    for (const option of courseSelect.options) {
-                        if (option.value === courseCode) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                    const yearLevelSelect = updateModalDiv.querySelector("select[name='year_level']")
-                    for (const option of yearLevelSelect.options) {
-                        if (option.value === yearLevel) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                    const genderSelect = updateModalDiv.querySelector("select[name='gender']")
-                    for (const option of genderSelect.options) {
-                        if (option.value === gender) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                });
+        async function previewImage(event) {    
+            const file = event.target.files[0];
+            const formData = new FormData();
+            formData.append("upload", file);
+        
+            const response = await fetch("{{ url_for('student.upload_student_image') }}", {
+                method: "POST",
+                body: formData,
             });
-            
-            const preview = document.getElementById('preview-image');
-            const submitButton = document.getElementById('submit-button');
-
-            async function previewImage(event) {    
-                const file = event.target.files[0];
-                const formData = new FormData();
-                formData.append("upload", file);
-
-                const response = await fetch("{{ url_for('student.upload_student_image') }}", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                const data = await response.json();
-
-                if (data && data.is_success) {
-                    const studentImageUrlInput = document.querySelector("[name='student_url']");
-                    console.log(data.url)
-                    studentImageUrlInput.value = data.url;
-                }
-
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                   
-                };
-
-                reader.readAsDataURL(file);
-            
+        
+            const data = await response.json();
+        
+            if (data && data.is_success) {
+                const studentImageUrlInput = document.querySelector("[name='student_url']");
+                studentImageUrlInput.value = data.url;
             }
+        
+            const reader = new FileReader();
+        
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+            };
+        
+            reader.readAsDataURL(file);
+        }
+        
+        const updateButtons = document.querySelectorAll("#update-student");
+        updateButtons.forEach((button) => {
+            const studentid = button.dataset.studentId;
+            const firstName = button.dataset.firstName;
+            const lastName = button.dataset.lastName;
+            const courseCode = button.dataset.courseCode;
+            const yearLevel = button.dataset.yearLevel;
+            const gender = button.dataset.gender;
+            const student_url = button.dataset.student_url;
+        
+            button.addEventListener("click", () => {
+                updateModal.show();
+                updateModalDiv.querySelector("form").action = "/student/update/" + studentid;
+                updateModalDiv.querySelector("input[name='student_id']").value = studentid;
+                updateModalDiv.querySelector("input[name='first_name']").value = firstName;
+                updateModalDiv.querySelector("input[name='last_name']").value = lastName;
+        
+                const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
+                for (const option of courseSelect.options) {
+                    if (option.value === courseCode) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+        
+                const yearLevelSelect = updateModalDiv.querySelector("select[name='year_level']")
+                for (const option of yearLevelSelect.options) {
+                    if (option.value === yearLevel) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+        
+                const genderSelect = updateModalDiv.querySelector("select[name='gender']")
+                for (const option of genderSelect.options) {
+                    if (option.value === gender) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+            });
+        });
+        
             
     </script>
 {% endblock content %}
