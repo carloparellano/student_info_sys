@@ -191,7 +191,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="submit" class="submit-button">Save</button>
                     </div>
                 </div>
             </div>
@@ -293,50 +293,36 @@
                 });
             });
             
-            function previewImage(event) {
-                const fileInput = event.target;
-                const imageWrapper = document.querySelector('.image-wrapper');
-                const previewImage = document.getElementById('preview-image');
-                const overlayText = document.querySelector('.overlay-text');
-            
-                const file = fileInput.files[0];
+            const preview = document.getElementById('preview-image');
+            const submitButton = document.getElementById('submit-button');
+
+            async function previewImage(event) {    
+                const file = event.target.files[0];
                 const formData = new FormData();
                 formData.append("upload", file);
-            
-                const reader = new FileReader();
-            
-                reader.onload = function (e) {
-                    previewImage.src = e.target.result;
-                    imageWrapper.classList.add('uploaded'); // Add a class to indicate that an image is uploaded
-                    overlayText.style.display = 'none'; // Hide the "Upload Photo" text
-                };
-            
-                reader.readAsDataURL(file);
-            
-                // Upload the file to Cloudinary
-                uploadToCloudinary(formData);
-            }
-            
-            function uploadToCloudinary(formData) {
-                fetch("YOUR_CLOUDINARY_UPLOAD_ENDPOINT", {
+
+                const response = await fetch("{{ url_for('student.student_dashboard') }}", {
                     method: "POST",
                     body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.is_success) {
-                        const imageUrlInput = document.getElementById('student_url');
-                        imageUrlInput.value = data.url; // Save the Cloudinary URL to a hidden input
-                    }
-                })
-                .catch(error => {
-                    console.error("Error uploading to Cloudinary:", error);
                 });
-            }
+
+                const data = await response.json();
+
+                if (data && data.is_success) {
+                    const studentImageUrlInput = document.querySelector("[name='upload_student_image']");
+                    studentImageUrlInput.value = data.url;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    submitButton.style.display = 'block'; // Show the submit button
+                };
+
+                reader.readAsDataURL(file);
             
-            // Add an event listener to the file input
-            const fileInput = document.getElementById('file-input');
-            fileInput.addEventListener('change', previewImage);
+            }
             
     </script>
 {% endblock content %}
