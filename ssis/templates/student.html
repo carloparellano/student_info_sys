@@ -301,7 +301,7 @@
                 const formData = new FormData();
                 formData.append("upload", file);
 
-                const response = await fetch("{{ url_for('student.student_dashboard') }}", {
+                const response = await fetch("{{ url_for('student.upload_student_image') }}", {
                     method: "POST",
                     body: formData,
                 });

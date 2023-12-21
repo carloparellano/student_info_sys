@@ -18,10 +18,10 @@ def student_dashboard():
         course_code = request.form.get("course_code")
         year_level = request.form.get("year_level")
         gender = request.form.get("gender")
-        # student_url = request.form.get("student_url")
+        student_url = request.form.get("student_url")
 
         # Handle image upload
-        student_url = upload_student_image()
+        # student_url = upload_student_image()
 
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM student WHERE student_id = %s", (student_id,))
@@ -44,7 +44,7 @@ def student_dashboard():
 
     return render_template("student.html", students=students, courses=courses)
 
-
+@student_bp.route('/upload_shop_image', methods=['POST'])
 def upload_student_image():
     file = request.files.get('upload')
 
@@ -60,12 +60,12 @@ def upload_student_image():
     image_url = result['secure_url']
     print(result['secure_url'])
 
-    return image_url
+
     # Update the shop's image URL in the database
-    # return jsonify({
-    #     'is_success': True,
-    #     'url': image_url
-    # })
+    return jsonify({
+        'is_success': True,
+        'url': image_url
+    })
 
 @student_bp.route('/update/<student_id>', methods=["POST"])
 def update_student(student_id):
