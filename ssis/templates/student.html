@@ -40,7 +40,7 @@
             <tbody>
                 {% for student in students %}
                 <tr>
-                    <td><img src="{{ student.student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover;"></td>
+                    <td><img src="{{ student.student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 60px; height: 60px; border-radius: 50px; object-fit: cover;"></td>
                     <td>{{ student.student_id }}</td>
                     <td>{{ student.first_name }}</td>
                     <td>{{ student.last_name }}</td>
