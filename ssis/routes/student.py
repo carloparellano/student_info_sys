@@ -37,7 +37,23 @@ def student_dashboard():
             mysql.connection.commit()
 
     cur = mysql.new_cursor(dictionary=True)
-    cur.execute("SELECT * FROM student")
+    cur.execute("""
+        SELECT 
+            student.student_id,
+            student.first_name,
+            student.last_name,
+            student.course_code,
+            student.year_level,
+            student.gender,
+            course.college_code,
+            student.student_url
+        FROM 
+            student
+        JOIN 
+            course ON student.course_code = course.course_code
+        JOIN 
+            college ON course.college_code = college.college_code;
+    """)
     students = cur.fetchall()
 
     course_cur = mysql.new_cursor(dictionary=True)
@@ -119,8 +135,32 @@ def student_search():
     query = request.args.get("query")
     if query:
         cur = mysql.new_cursor(dictionary=True)
-        cur.execute("SELECT * FROM student WHERE student_id LIKE %s OR first_name LIKE %s OR last_name LIKE %s OR course_code LIKE %s OR year_level LIKE %s OR gender LIKE %s", 
-                    (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"))
+        cur.execute("""
+            SELECT 
+                student.student_id,
+                student.first_name,
+                student.last_name,
+                student.course_code,
+                student.year_level,
+                student.gender,
+                course.college_code,
+                student.student_url
+            FROM 
+                student
+            JOIN 
+                course ON student.course_code = course.course_code
+            JOIN 
+                college ON course.college_code = college.college_code
+            WHERE 
+                student.student_id LIKE %s 
+                OR student.first_name LIKE %s 
+                OR student.last_name LIKE %s 
+                OR student.course_code LIKE %s 
+                OR student.year_level LIKE %s 
+                OR student.gender LIKE %s
+                OR course.college_code LIKE %s
+                OR college.college_code LIKE %s
+        """, (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%"))
         students = cur.fetchall()
         return render_template("student.html", students=students, query=query)
     else:
