@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template
 from flask_mysql_connector import MySQL
+import cloudinary
+# from config import CLOUD_NAME, CLOUD_API_KEY, CLOUD_SECRET_KEY
 
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST")
@@ -9,12 +11,14 @@ app.config['MYSQL_DATABASE'] = os.getenv("MYSQL_DATABASE")
 app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 mysql = MySQL(app)
+CLOUD_NAME=os.getenv("CLOUD_NAME")
+CLOUD_API_KEY=os.getenv("CLOUD_API_KEY")
+CLOUD_SECRET_KEY=os.getenv("CLOUD_SECRET_KEY")
 
-import cloudinary
 cloudinary.config(
-        cloud_name='dwhasp9x4',
-        api_key='749517852535723',
-        api_secret='7m-um2rwaKtIDs-BYnsuNulo34A',
+        cloud_name=CLOUD_NAME,
+        api_key=CLOUD_API_KEY,
+        api_secret=CLOUD_SECRET_KEY,
     )
 
 
