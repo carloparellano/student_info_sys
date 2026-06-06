@@ -1,0 +1,6 @@
+# Python 3.10
+flask-mysql
+flask-mysql-connector
+flask-bootstrap
+flask-wtf
+python-dotenv

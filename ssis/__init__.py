@@ -1,39 +1,45 @@
 import os
 from flask import Flask, render_template
-from flask_mysql_connector import MySQL
+from flask_bootstrap import Bootstrap
+from config import DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY, BOOTSTRAP_SERVE_LOCAL
 import cloudinary
-# from config import CLOUD_NAME, CLOUD_API_KEY, CLOUD_SECRET_KEY
+from flask_wtf.csrf import CSRFProtect
 
-app = Flask(__name__)
-app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST")
-app.config['MYSQL_USER'] = os.getenv("MYSQL_USER")
-app.config['MYSQL_DATABASE'] = os.getenv("MYSQL_DATABASE")
-app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD")
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
-mysql = MySQL(app)
-CLOUD_NAME=os.getenv("CLOUD_NAME")
-CLOUD_API_KEY=os.getenv("CLOUD_API_KEY")
-CLOUD_SECRET_KEY=os.getenv("CLOUD_SECRET_KEY")
-
-cloudinary.config(
-        cloud_name=CLOUD_NAME,
-        api_key=CLOUD_API_KEY,
-        api_secret=CLOUD_SECRET_KEY,
-    )
+bootstrap = Bootstrap()
 
 
 def create_app():
-    
-    from ssis.routes.student import student_bp
-    from ssis.routes.college import college_bp
-    from ssis.routes.course import course_bp
-    
+    app = Flask(__name__)
+
+    app.config["DB_HOST"] = DB_HOST
+    app.config["DB_USER"] = DB_USERNAME
+    app.config["DB_PASSWORD"] = DB_PASSWORD
+    app.config["DB_NAME"] = DB_NAME
+    app.config["SECRET_KEY"] = SECRET_KEY
+    app.config["BOOTSTRAP_SERVE_LOCAL"] = BOOTSTRAP_SERVE_LOCAL
+    print(DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY, BOOTSTRAP_SERVE_LOCAL)
+    bootstrap.init_app(app)
+
+    # Cloudinary config
+    cloudinary.config(
+        cloud_name=os.getenv("CLOUD_NAME"),
+        api_key=os.getenv("CLOUD_API_KEY"),
+        api_secret=os.getenv("CLOUD_SECRET_KEY"),
+    )
+
     @app.route("/")
     def home_page():
         return render_template("home.html")
+
+    # Import blueprints (CORRECT NAMES)
+    from .students import student_bp
+    from .colleges import college_bp
+    from .courses import courses_bp
     
-    app.register_blueprint(student_bp, url_prefix='/student')
-    app.register_blueprint(course_bp, url_prefix='/course')
-    app.register_blueprint(college_bp, url_prefix='/college')
-    
+    # Register blueprints
+    app.register_blueprint(student_bp, url_prefix="/student")
+    app.register_blueprint(courses_bp, url_prefix="/course")
+    app.register_blueprint(college_bp, url_prefix="/college")
+
+    CSRFProtect(app)
     return app

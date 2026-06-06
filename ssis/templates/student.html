@@ -13,7 +13,7 @@
         <h1 class="mb-4">Student Information</h1>
         <div class="row mb-4">
             <div class="col-9">
-                <form action="{{ url_for('student.student_search') }}" method="GET" class="input-group">
+                <form action="{{ url_for('students.student_search') }}" method="GET" class="input-group">
                     <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2" value="{{query}}">
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="submit">Search</button>
@@ -27,8 +27,8 @@
         <table class="table table-striped text-center">
             <thead>
                 <tr>
-                    <th>Profie Picture</th>
-                    <th>Studnet ID</th>
+                    <th>Profile Picture</th>
+                    <th>Student ID</th>
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Course</th>
@@ -41,7 +41,7 @@
             <tbody>
                 {% for student in students %}
                 <tr>
-                    <td><img src="{{ student.student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 60px; height: 60px; border-radius: 50px; object-fit: cover;"></td>
+                    <td><img src="{{ student.student_url if student.student_url else url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 60px; height: 60px; border-radius: 50px; object-fit: cover;"></td>
                     <td>{{ student.student_id }}</td>
                     <td>{{ student.first_name }}</td>
                     <td>{{ student.last_name }}</td>
@@ -61,10 +61,9 @@
                             data-gender="{{ student.gender }}"
                             data-student-url="{{ student.student_url }}"
                             >Edit</button>
-
                         <button
-                        data-student-id="{{ student.student_id }}"
-                        id="confirmDeleteButton" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            data-student-id="{{ student.student_id }}"
+                            class="btn btn-danger delete-student-btn">
                             Delete
                         </button>
                     </td>
@@ -72,12 +71,14 @@
                 {% endfor %}
             </tbody>
         </table>
+        <!-- Pagination Controls removed -->
     </div>
     
 
     <!-- Modal for Adding Student -->
     <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <form method="post">
+        <form method="post"  method="POST" action="{{ url_for('students.student_dashboard') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -92,21 +93,21 @@
                                 <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="add" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
                                 <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
                             </label>
-                            <input type="file" id="file-input" name="add_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'add')" required>
+                            <input type="file" id="file-input" name="add_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'add')">
                             <input id="student_url" data-form-type="add" name="student_url" hidden />
                         </div>
 
                         <div class="form-group">
                             <label for="student_id">Student ID</label>
-                            <input name="student_id" type="text" class="form-control" id="student_id">
+                            <input name="student_id" type="text" class="form-control" id="student_id" autocomplete="off">
                         </div>
                         <div class="form-group">
                             <label for="first_name">First Name</label>
-                            <input name="first_name" type="text" class="form-control" id="first_name">
+                            <input name="first_name" type="text" class="form-control" id="first_name" autocomplete="given-name">
                         </div>
                         <div class="form-group">
                             <label for="last_name">Last Name</label>
-                            <input name="last_name" type="text" class="form-control" id="last_name">
+                            <input name="last_name" type="text" class="form-control" id="last_name" autocomplete="family-name">
                         </div>
                         <div class="form-group">
                             <label for="course_code">Course</label>
@@ -131,8 +132,8 @@
                             <label for="gender">Gender</label>
                             <select name="gender" class="form-control" id="gender">
                                 <option value="" disabled selected>--Select Gender--</option>
-                                <option value="Male ">Male </option>
-                                <option>Female</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                             </select>
                         </div>
                     </div>
@@ -148,6 +149,7 @@
     <!-- Modal for Updating Student -->
     <div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -159,21 +161,21 @@
                             <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="update" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
                             <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
                         </label>
-                        <input type="file" id="file-input-update" name="update_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'update')" required>
+                        <input type="file" id="file-input-update" name="update_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'update')">
                         <input id="student_url" data-form-type="update" name="student_url" hidden />
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="student_id">Student ID</label>
-                            <input name="student_id" type="text" class="form-control" id="student_id">
+                            <input name="student_id" type="text" class="form-control" id="student_id" autocomplete="off">
                         </div>
                         <div class="form-group">
                             <label for="first_name">First Name</label>
-                            <input name="first_name" type="text" class="form-control" id="first_name">
+                            <input name="first_name" type="text" class="form-control" id="first_name" autocomplete="given-name">
                         </div>
                         <div class="form-group">
                             <label for="last_name">Last Name</label>
-                            <input name="last_name" type="text" class="form-control" id="last_name">
+                            <input name="last_name" type="text" class="form-control" id="last_name" autocomplete="family-name">
                         </div>
                         <div class="form-group">
                             <label for="course_code">Course</label>
@@ -212,153 +214,174 @@
         </form>
     </div>
 
+   <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-    <!-- Modal for Deleting Student -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Student</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                <p>
-                    Are you sure you want to delete this?
-                </p>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button id="confirmDeleteButton" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="deleteStudent()">
-                Delete
-                </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            populateDeleteCode()
-        })
+    /* =========================
+       UPDATE STUDENT MODAL
+    ========================= */
 
-        const deleteModal = document.getElementById("deleteModal");
-        const deleteAnywayButton = deleteModal.querySelector(".btn-danger");
+    const updateModalDiv = document.getElementById("updateStudentModal");
+    const updateModal = new bootstrap.Modal(updateModalDiv);
 
-        function populateDeleteCode() {
-            const deleteButtons = document.querySelectorAll("#confirmDeleteButton");
-            deleteButtons.forEach((button) => {
-                const studentid = button.dataset.studentId;
-                button.addEventListener("click", () => {
-                    deleteAnywayButton.dataset.studentId = studentid;
-                });
-            });
-        }
+    document.querySelectorAll("#update-student").forEach(button => {
 
-        function deleteStudent() {
-            const studentid = deleteAnywayButton.dataset.studentId;
-            fetch("/student/delete/" + studentid, {
-                method: "DELETE"
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload()
-                }
-            })
-        }
+        button.addEventListener("click", function () {
 
-        
-        const submitButton = document.getElementById('submit-button');
-        const updateModalDiv = document.getElementById("updateStudentModal");
-        const updateModal = new bootstrap.Modal(updateModalDiv, {});
-        
-        async function previewImage(event, type) {
-            const preview = document.querySelector(`img[id='preview-image'][data-form-type='${type}']`);
-            const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append("upload", file);
-        
-            try {
-                const response = await fetch("{{ url_for('student.upload_student_image') }}", {
-                    method: "POST",
-                    body: formData,
-                });
-        
-                if (!response.ok) {
-                    if (response.status === 413) {
-                        // Handle 413 (Payload Too Large) error
-                        alert("Image is too large.");
-                        // You can show an alert to the user or take other appropriate actions
-                    } else {
-                        alert("An error occurred while uploading the image.");
-                    }
-                    return;
-                }
-        
-                const data = await response.json();
-        
-                if (data && data.is_success) {
-                    const studentImageUrlInput = document.querySelector(`input[name='student_url'][data-form-type='${type}']`);
-                    studentImageUrlInput.value = data.url;
-                }
-        
-                const reader = new FileReader();
-        
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                };
-        
-                reader.readAsDataURL(file);
-            } catch (error) {
-                alert("An unexpected error occurred: " + error.message);
-            }
-        }
-        
-        const updateButtons = document.querySelectorAll("#update-student");
-        
-        updateButtons.forEach((button) => {
-            const studentid = button.dataset.studentId;
-            const firstName = button.dataset.firstName;
-            const lastName = button.dataset.lastName;
-            const courseCode = button.dataset.courseCode;
-            const yearLevel = button.dataset.yearLevel;
-            const gender = button.dataset.gender;
-            const student_url = button.dataset.studentUrl;
-        
-            button.addEventListener("click", () => {
-                updateModal.show();
-                updateModalDiv.querySelector("form").action = "/student/update/" + studentid;
-                updateModalDiv.querySelector("input[name='student_id']").value = studentid;
-                updateModalDiv.querySelector("input[name='first_name']").value = firstName;
-                updateModalDiv.querySelector("input[name='last_name']").value = lastName;
-                updateModalDiv.querySelector("input[name='student_url']").value = student_url;
-                
-                document.querySelector("img[id='preview-image'][data-form-type='update']").src = student_url;
-                const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
-                for (const option of courseSelect.options) {
-                    if (option.value === courseCode) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-        
-                const yearLevelSelect = updateModalDiv.querySelector("select[name='year_level']")
-                for (const option of yearLevelSelect.options) {
-                    if (option.value === yearLevel) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-        
-                const genderSelect = updateModalDiv.querySelector("select[name='gender']")
-                for (const option of genderSelect.options) {
-                    if (option.value === gender) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-            });
+            const studentid = this.dataset.studentId;
+            const firstName = this.dataset.firstName;
+            const lastName = this.dataset.lastName;
+            const courseCode = this.dataset.courseCode;
+            const yearLevel = this.dataset.yearLevel;
+            const gender = this.dataset.gender;
+            const studentUrl = this.dataset.studentUrl;
+
+            updateModal.show();
+
+            const form = updateModalDiv.querySelector("form");
+            form.action = "/student/update/" + studentid;
+
+            updateModalDiv.querySelector("input[name='student_id']").value = studentid;
+            updateModalDiv.querySelector("input[name='first_name']").value = firstName;
+            updateModalDiv.querySelector("input[name='last_name']").value = lastName;
+            updateModalDiv.querySelector("input[name='student_url']").value = studentUrl;
+
+            document.querySelector("img[data-form-type='update']").src = studentUrl;
+
+            updateModalDiv.querySelector("select[name='course_code']").value = courseCode;
+            updateModalDiv.querySelector("select[name='year_level']").value = yearLevel;
+            updateModalDiv.querySelector("select[name='gender']").value = gender;
         });
-        
-            
-    </script>
+
+    });
+
+
+    /* =========================
+       UPDATE FORM SUBMIT
+    ========================= */
+
+    const updateForm = updateModalDiv.querySelector("form");
+
+    updateForm.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        fetch(updateForm.action, {
+            method: "POST",
+            body: new FormData(updateForm)
+        })
+        .then(res => {
+            if(res.ok){
+                alert("Student updated successfully!");
+                window.location.reload();
+            }
+        });
+    });
+
+
+    /* =========================
+       DELETE STUDENT
+    ========================= */
+
+    document.querySelectorAll(".delete-student-btn").forEach(btn => {
+
+        btn.addEventListener("click", function(){
+
+            const id = this.dataset.studentId;
+
+            if(!confirm("Delete student " + id + "?")) return;
+
+            const formData = new FormData();
+            formData.append("csrf_token", getCsrfToken());
+
+            fetch("/student/delete/" + id, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                if(data.success){
+
+                    const row = btn.closest("tr");
+                    if(row) row.remove();
+
+                    alert("Student deleted successfully!");
+                }
+
+            });
+
+        });
+
+    });
+
+});
+
+
+/* =========================
+   IMAGE PREVIEW + UPLOAD
+========================= */
+
+async function previewImage(event, type){
+
+    const preview = document.querySelector(`img[data-form-type='${type}']`);
+    const file = event.target.files[0];
+
+    const formData = new FormData();
+    formData.append("upload", file);
+
+    try{
+
+        const csrfToken = getCsrfToken();
+
+        const response = await fetch("{{ url_for('students.upload_student_image') }}", {
+            method: "POST",
+            body: formData,
+            headers: { "X-CSRFToken": csrfToken },
+            credentials: "same-origin"
+        });
+
+        const data = await response.json();
+
+        if(!response.ok){
+            alert(data.error || "Upload failed");
+            return;
+        }
+
+        if(data.is_success){
+
+            const studentImageUrlInput = document.querySelector(
+                `input[name='student_url'][data-form-type='${type}']`
+            );
+
+            studentImageUrlInput.value = data.url;
+
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+            preview.src = e.target.result;
+        };
+
+        reader.readAsDataURL(file);
+
+    }catch(error){
+        alert("Upload error: " + error.message);
+    }
+
+}
+
+
+/* =========================
+   CSRF TOKEN HELPER
+========================= */
+
+function getCsrfToken(){
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    return csrfInput ? csrfInput.value : "";
+}
+</script>
 {% endblock content %}

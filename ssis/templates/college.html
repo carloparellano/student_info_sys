@@ -43,154 +43,158 @@
                             class="btn btn-primary"
                             data-college-name="{{ college.college_name }}"
                             data-college-code="{{ college.college_code }}"
-                            
                         >Edit</button>
                         <button
-                        data-college-code="{{ college.college_code }}"
-                        id="confirmDeleteButton" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        Delete
+                            data-college-code="{{ college.college_code }}"
+                            class="btn btn-danger delete-college-btn">
+                            Delete
                         </button>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <!-- Pagination Controls removed -->
     </div>
     
 
     <!-- Modal for Adding College -->
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ messages[0] }}
-            </div>
-        {% endif %}
-    {% endwith %}
-    <div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <form method="post">
-            <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h1 class="modal-title fs-5" id="addCollegeModalLabel">Add College</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="college_code">College Code</label>
-                        <input name="college_code" type="text" class="form-control" id="college_code">
-                    </div>
-                    <div class="form-group">
-                        <label for="college_name">College Name</label>
-                        <input name="college_name" type="text" class="form-control" id="college_name">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Modal for Update College -->
-    <div class="modal fade" id="updateCollegeModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <form method="post">
-            <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h1 class="modal-title fs-5" id="updateCollegeModalLabel">Update College</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="college_code">College Code</label>
-                        <input name="college_code" type="text" class="form-control" id="college_code">
-                    </div>
-                    <div class="form-group">
-                        <label for="college_name">College Name</label>
-                        <input name="college_name" type="text" class="form-control" id="college_name">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Modal for Deleting College -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                <h1 class="modal-title fs-5" id="deleteModalLabel">Delete College</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h1 class="modal-title fs-5" id="addCollegeModalLabel">Add College</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                <p>
-                    Are you sure you want to delete this?
-                </p>
+                    <div class="form-group">
+                        <label for="add_college_code">College Code</label>
+                        <input name="college_code" type="text" class="form-control" id="add_college_code" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="add_college_name">College Name</label>
+                        <input name="college_name" type="text" class="form-control" id="add_college_name" autocomplete="off">
+                    </div>
                 </div>
                 <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" onclick="deleteCollege()">
-                    Delete Anyway
-                </button>
-                
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
+</div>
 
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            populateDeleteCode()
-        })
 
-        const deleteModal = document.getElementById("deleteModal");
-        const deleteAnywayButton = deleteModal.querySelector(".btn-danger");
+   <!-- Modal for Update College -->
+<div class="modal fade" id="updateCollegeModal" tabindex="-1" aria-labelledby="updateCollegeModalLabel" aria-hidden="true">
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateCollegeModalLabel">Update College</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="update_college_code">College Code</label>
+                        <input name="college_code" type="text" class="form-control" id="update_college_code" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="update_college_name">College Name</label>
+                        <input name="college_name" type="text" class="form-control" id="update_college_name" autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
-        function populateDeleteCode() {
-            const deleteButtons = document.querySelectorAll("#confirmDeleteButton");
-            deleteButtons.forEach((button) => {
-                const collegeCode = button.dataset.collegeCode;
-                button.addEventListener("click", () => {
-                    deleteAnywayButton.dataset.collegeCode = collegeCode;
-                });
-            });
-        }
+<script>
+// Get CSRF token from hidden input (handle multiple forms)
+function getCsrfToken() {
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    return csrfInput ? csrfInput.value : '';
+}
 
-        function deleteCollege() {
-            const collegeCode = deleteAnywayButton.dataset.collegeCode;
-            fetch("/college/delete/" + collegeCode, {
-                method: "DELETE"
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload()
-                }
-            })
-        }
+// Edit College Modal
+const updateCollegeButtons = document.querySelectorAll('#update-college');
+const updateCollegeModalDiv = document.getElementById('updateCollegeModal');
+const updateCollegeModal = updateCollegeModalDiv ? new bootstrap.Modal(updateCollegeModalDiv, {}) : null;
 
-        const updateModalDiv= document.getElementById("updateCollegeModal");
-        var updateModal = new bootstrap.Modal(updateModalDiv, {});
+updateCollegeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        if (!updateCollegeModal) return;
+        updateCollegeModal.show();
+        updateCollegeModalDiv.querySelector('form').action = '/college/update/' + button.dataset.collegeCode;
+        updateCollegeModalDiv.querySelector("input[name='college_code']").value = button.dataset.collegeCode;
+        updateCollegeModalDiv.querySelector("input[name='college_name']").value = button.dataset.collegeName;
+    });
+});
 
-        const updateButtons = document.querySelectorAll("#update-college");
-        updateButtons.forEach((button) => {
-            const collegeCode = button.dataset.collegeCode;
-            const collegeName = button.dataset.collegeName;
-            button.addEventListener("click", () => {
-                updateModal.show();
-                updateModalDiv.querySelector("form").action = "/college/update/" + collegeCode;
-                updateModalDiv.querySelector("input[name='college_code']").value = collegeCode; 
-                updateModalDiv.querySelector("input[name='college_name']").value = collegeName; 
-            })
+// Show alert on update
+const updateCollegeForm = updateCollegeModalDiv ? updateCollegeModalDiv.querySelector('form') : null;
+if (updateCollegeForm) {
+    updateCollegeForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(updateCollegeForm.action, {
+            method: 'POST',
+            body: new FormData(updateCollegeForm)
+        }).then(res => {
+            if (res.ok) {
+                alert('College is already updated!');
+                window.location.reload();
+            }
         });
+    });
+}
 
-    </script>
+// Delete College (with CSRF token)
+document.querySelectorAll('.delete-college-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const code = this.dataset.collegeCode;
+        if (confirm('Are you sure you want to delete ' + code + '?')) {
+            const formData = new FormData();
+            formData.append('csrf_token', getCsrfToken());
+            fetch('/college/delete/' + code, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+                .then(res => {
+                    // Handle redirect (302) or non-JSON error gracefully
+                    if (!res.ok) {
+                        alert('Error deleting college.');
+                        return Promise.reject('Request failed');
+                    }
+                    const contentType = res.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return res.json();
+                    } else {
+                        alert('Error deleting college.');
+                        return Promise.reject('Invalid JSON response');
+                    }
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        // Remove the row from the table
+                        const row = btn.closest('tr');
+                        if (row) row.remove();
+                        alert('College deleted successfully!');
+                    }
+                })
+                .catch(() => {
+                    // Error already handled above
+                });
+        }
+    });
+});
+</script>
 {% endblock content %}
