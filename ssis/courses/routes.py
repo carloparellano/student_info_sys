@@ -11,8 +11,11 @@ from .controller import (
     search_courses_count,
 )
 from . import courses_bp
+from ssis.utils import login_required
+
 
 @courses_bp.route("/", methods=["GET", "POST"])
+@login_required
 def course_dashboard():
     form = CourseForm()
 
@@ -45,24 +48,28 @@ def course_dashboard():
 
 
 @courses_bp.route("/update/<course_code>", methods=["POST"])
+@login_required
 def update_course(course_code):
     update_course_db(course_code, request.form)
     return redirect("/course/")
 
 
 @courses_bp.route("/delete/<course_code>", methods=["POST"])
+@login_required
 def delete_course(course_code):
     delete_course_db(course_code)
     return jsonify(success=True)
 
 
 @courses_bp.route("/courses/delete/<course_code>", methods=["POST"])
+@login_required
 def delete_course_ajax(course_code):
     delete_course_db(course_code)
     return jsonify(success=True)
 
 
 @courses_bp.route("/search/", methods=["GET"])
+@login_required
 def course_search():
     query = request.args.get("query")
     page = int(request.args.get("page", 1))

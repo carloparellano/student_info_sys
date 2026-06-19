@@ -7,13 +7,16 @@ from .controller import (
     update_student_db,
     delete_student_db,
     search_students,
-    upload_student_file,  # upload is now here
+    upload_student_file,
     get_students_count,
     search_students_count
 )
 from . import student_bp
+from ssis.utils import login_required
+
 
 @student_bp.route("/", methods=["GET", "POST"])
+@login_required
 def student_dashboard():
     form = StudentForm()
     courses = get_courses()
@@ -43,6 +46,7 @@ def student_dashboard():
 
 
 @student_bp.route("/upload_student_image", methods=["POST"])
+@login_required
 def upload_student_image():
     file = request.files.get("upload")
     result = upload_student_file(file)  # call controller
@@ -51,18 +55,21 @@ def upload_student_image():
 
 
 @student_bp.route("/update/<student_id>", methods=["POST"])
+@login_required
 def update_student(student_id):
     update_student_db(student_id, request.form)
     return redirect("/student/")
 
 
 @student_bp.route("/delete/<student_id>", methods=["POST"])
+@login_required
 def delete_student(student_id):
     delete_student_db(student_id)
     return jsonify(success=True)
 
 
 @student_bp.route("/search/", methods=["GET"])
+@login_required
 def student_search():
     query = request.args.get("query")
     page = int(request.args.get("page", 1))

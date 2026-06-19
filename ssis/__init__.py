@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, session, redirect, url_for
 from flask_bootstrap import Bootstrap
 from config import DB_USERNAME, DB_PASSWORD, DB_NAME, DB_HOST, SECRET_KEY, BOOTSTRAP_SERVE_LOCAL
 import cloudinary
@@ -29,17 +29,21 @@ def create_app():
 
     @app.route("/")
     def home_page():
+        if "user" not in session:
+            return redirect(url_for("users.login"))
         return render_template("home.html")
 
-    # Import blueprints (CORRECT NAMES)
+    # Import blueprints
     from .students import student_bp
     from .colleges import college_bp
     from .courses import courses_bp
-    
+    from .users import user_bp
+
     # Register blueprints
     app.register_blueprint(student_bp, url_prefix="/student")
     app.register_blueprint(courses_bp, url_prefix="/course")
     app.register_blueprint(college_bp, url_prefix="/college")
+    app.register_blueprint(user_bp, url_prefix="/auth")
 
     CSRFProtect(app)
     return app

@@ -36,6 +36,15 @@
                 <li class="nav-item">
                     <a class="nav-link bold-text" href="/college">Colleges</a>
                 </li>
+                {% if session.get('user') %}
+                <li class="nav-item">
+                    <a class="nav-link bold-text" href="/auth/logout">Logout</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link bold-text" href="/auth/login">Login</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>
