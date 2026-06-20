@@ -27,12 +27,6 @@ def create_app():
         api_secret=os.getenv("CLOUD_SECRET_KEY"),
     )
 
-    @app.route("/")
-    def home_page():
-        if "user" not in session:
-            return redirect(url_for("users.login"))
-        return render_template("home.html")
-
     # Import blueprints
     from .students import student_bp
     from .colleges import college_bp
@@ -44,6 +38,12 @@ def create_app():
     app.register_blueprint(courses_bp, url_prefix="/course")
     app.register_blueprint(college_bp, url_prefix="/college")
     app.register_blueprint(user_bp, url_prefix="/auth")
+
+    @app.route("/")
+    def home_page():
+        if "user" not in session:
+            return redirect(url_for("users.login"))
+        return render_template("home.html")
 
     CSRFProtect(app)
     return app

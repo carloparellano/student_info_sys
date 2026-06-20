@@ -12,14 +12,70 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
-    
+    <style>
+      /* ── Pagination ── */
+      .sis-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid #e5e7eb;
+        padding: 0.75rem 0 0.25rem;
+        margin-top: 1rem;
+        user-select: none;
+      }
+      .sis-pagination .pag-prev,
+      .sis-pagination .pag-next {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        text-decoration: none;
+        padding: 6px 4px;
+        border-radius: 6px;
+        transition: color .15s;
+        min-width: 90px;
+      }
+      .sis-pagination .pag-prev { justify-content: flex-start; }
+      .sis-pagination .pag-next { justify-content: flex-end; }
+      .sis-pagination .pag-prev:hover,
+      .sis-pagination .pag-next:hover { color: #111827; }
+      .sis-pagination .pag-prev.disabled,
+      .sis-pagination .pag-next.disabled {
+        color: #9ca3af;
+        pointer-events: none;
+      }
+      .sis-pagination .pag-pages {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .sis-pagination .pag-pages a,
+      .sis-pagination .pag-pages span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: #374151;
+        transition: background .15s, color .15s;
+      }
+      .sis-pagination .pag-pages a:hover { background: #f3f4f6; }
+      .sis-pagination .pag-pages a.active {
+        background: #7e2811;
+        color: #fff;
+      }
+      .sis-pagination .pag-pages span.dots { color: #9ca3af; cursor: default; }
+    </style>
   </head>
   <body>
     {% include 'navbar.html' %}
     {% block content %}
     {% endblock content %}
-
-
-  
   </body>
 </html>
