@@ -1,17 +1,23 @@
-{% macro render(page, total, per_page, base_url, query=None) %}
+{% macro render(page, total, per_page, base_url, extra_params='') %}
+{#
+  extra_params: pre-built query string fragment (no leading ?) e.g. "sort=first_name&order=asc&query=foo"
+  The macro appends &page=N to that fragment.
+#}
 {% set total_pages = ((total - 1) // per_page + 1) if total > 0 else 1 %}
 {% if total_pages > 1 %}
 
-{# Build a page URL helper #}
-{% set sep = '&' if '?' in base_url else '?' %}
+{% set sep = '?' %}
+{% if extra_params %}
+  {% set prefix = base_url + sep + extra_params + '&' %}
+{% else %}
+  {% set prefix = base_url + sep %}
+{% endif %}
 
 <nav class="sis-pagination" aria-label="Pagination">
 
   {# ── Previous ── #}
   {% if page > 1 %}
-    <a class="pag-prev" href="{{ base_url }}{{ sep }}page={{ page - 1 }}{% if query %}&query={{ query }}{% endif %}">
-      ← Previous
-    </a>
+    <a class="pag-prev" href="{{ prefix }}page={{ page - 1 }}">← Previous</a>
   {% else %}
     <span class="pag-prev disabled">← Previous</span>
   {% endif %}
@@ -20,7 +26,6 @@
   <div class="pag-pages">
     {% for p in range(1, total_pages + 1) %}
       {% if p == 1 or p == total_pages or (p >= page - 1 and p <= page + 1) %}
-        {# Show ellipsis before if there's a gap after page 1 #}
         {% if p == page - 1 and p > 2 %}
           <span class="dots">…</span>
         {% endif %}
@@ -28,10 +33,9 @@
         {% if p == page %}
           <a href="#" class="active" aria-current="page">{{ p }}</a>
         {% else %}
-          <a href="{{ base_url }}{{ sep }}page={{ p }}{% if query %}&query={{ query }}{% endif %}">{{ p }}</a>
+          <a href="{{ prefix }}page={{ p }}">{{ p }}</a>
         {% endif %}
 
-        {# Show ellipsis after if there's a gap before last page #}
         {% if p == page + 1 and p < total_pages - 1 %}
           <span class="dots">…</span>
         {% endif %}
@@ -41,9 +45,7 @@
 
   {# ── Next ── #}
   {% if page < total_pages %}
-    <a class="pag-next" href="{{ base_url }}{{ sep }}page={{ page + 1 }}{% if query %}&query={{ query }}{% endif %}">
-      Next →
-    </a>
+    <a class="pag-next" href="{{ prefix }}page={{ page + 1 }}">Next →</a>
   {% else %}
     <span class="pag-next disabled">Next →</span>
   {% endif %}
