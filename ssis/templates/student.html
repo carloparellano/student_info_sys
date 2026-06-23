@@ -1,414 +1,606 @@
 {% extends "layout.html" %}
+{% from "pagination.html" import render as render_pagination %}
 
 {% block content %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <div class="alert alert-info alert-dismissible fade show" role="alert">
-    {{ messages [0] }}
+    {{ messages[0] }}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
 {% endwith %}
-    <div class="container">
-        <h1 class="mb-4">Student Information</h1>
-        <div class="row mb-4">
-            <div class="col-9">
-                <form action="{{ url_for('students.student_search') }}" method="GET" class="input-group">
-                    <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2" value="{{query}}">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-3">
-                <button class="btn btn-success w-100 btn-block" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
-            </div>
+
+<style>
+    /* ── Filter Panel ── */
+    .filter-panel {
+        background: #fff;
+        border: 1px solid #d9c4bf;
+        border-radius: 8px;
+        padding: 1rem 1.25rem 1rem;
+        margin-bottom: 1rem;
+        display: none; /* hidden by default, JS toggles */
+    }
+    .filter-panel.open { display: block; }
+
+    .filter-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .filter-panel-header span {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #7e2811;
+    }
+    .filter-clear-btn {
+        background: none;
+        border: none;
+        color: #7e2811;
+        font-size: 0.82rem;
+        cursor: pointer;
+        padding: 0;
+        text-decoration: underline;
+    }
+    .filter-clear-btn:hover { color: #5a1c0b; }
+
+    .filter-selects {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 140px;
+    }
+    .filter-group label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .filter-group select {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.4rem 0.65rem;
+        font-size: 0.875rem;
+        color: #111827;
+        background: #fff;
+        appearance: auto;
+        cursor: pointer;
+        transition: border-color .15s;
+    }
+    .filter-group select:focus {
+        outline: none;
+        border-color: #7e2811;
+        box-shadow: 0 0 0 2px rgba(126,40,17,.15);
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+    .btn-apply-filter {
+        background-color: #7e2811;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.42rem 1.1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background .15s;
+    }
+    .btn-apply-filter:hover { background-color: #9e3315; }
+
+    /* Toggle button — matches Search/Add Student size */
+    .btn-filter-toggle {
+        background-color: #6c757d;
+        color: #fff;
+        border: none;
+    }
+    .btn-filter-toggle:hover,
+    .btn-filter-toggle.active {
+        background-color: #7e2811;
+        color: #fff;
+    }
+
+    /* active filter badge on toggle button */
+    .filter-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #7e2811;
+        color: #fff;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+        margin-left: 6px;
+        font-weight: 700;
+    }
+    .btn-filter-toggle.active .filter-badge {
+        background: #fff;
+        color: #7e2811;
+    }
+</style>
+
+<div class="container">
+    <h1 class="mb-4">Student Information</h1>
+
+    <!-- ── Row 1: Search + Filters toggle + Add Student ── -->
+    {% set active_count = (1 if college else 0) + (1 if year else 0) + (1 if gender_filter else 0) + (1 if course_filter else 0) + (1 if sort != 'student_id' or order != 'asc' else 0) %}
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <!-- Search (grows to fill available space) -->
+        <form action="{{ url_for('students.student_search') }}" method="GET"
+              class="input-group flex-grow-1" style="max-width: none;">
+            <input name="query" type="text" class="form-control" placeholder="Search"
+                   aria-label="Search" value="{{ query if query else '' }}">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+
+        <!-- Filters toggle -->
+        <button id="filterToggleBtn" class="btn btn-secondary flex-shrink-0 btn-filter-toggle" type="button">
+            Filters
+            {% if active_count > 0 %}
+                <span class="filter-badge">{{ active_count }}</span>
+            {% endif %}
+        </button>
+
+        <!-- Add Student -->
+        <button class="btn btn-success flex-shrink-0" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+            Add Student
+        </button>
+    </div>
+
+    <!-- ── Filter Panel ── -->
+    <div id="filterPanel" class="filter-panel{% if college or year or gender_filter or course_filter or sort != 'student_id' or order != 'asc' %} open{% endif %}">        <div class="filter-panel-header">
+            <span>Filters</span>
+            <button class="filter-clear-btn" id="clearFiltersBtn" type="button">✕ Clear all</button>
         </div>
-        <table class="table table-striped text-center">
-            <thead>
-                <tr>
-                    <th>Profile Picture</th>
-                    <th>Student ID</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Course</th>
-                    <th>College</th>
-                    <th>Year Level</th>
-                    <th>Gender</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr>
-                    <td><img src="{{ student.student_url if student.student_url else url_for('static', filename='download.jpg') }}" alt="Shop Photo" style="width: 60px; height: 60px; border-radius: 50px; object-fit: cover;"></td>
-                    <td>{{ student.student_id }}</td>
-                    <td>{{ student.first_name }}</td>
-                    <td>{{ student.last_name }}</td>
-                    <td>{{ student.course_code }}</td>
-                    <td>{{ student.college_code }}</td>
-                    <td>{{ student.year_level }}</td>
-                    <td>{{ student.gender }}</td>
-                    <td>
-                        <button 
-                            id="update-student"
-                            class="btn btn-primary"
-                            data-student-id="{{ student.student_id }}"
-                            data-first-name="{{ student.first_name }}"
-                            data-last-name="{{ student.last_name }}"
-                            data-course-code="{{ student.course_code }}"
-                            data-year-level="{{ student.year_level }}"
-                            data-gender="{{ student.gender }}"
-                            data-student-url="{{ student.student_url }}"
-                            >Edit</button>
-                        <button
-                            data-student-id="{{ student.student_id }}"
-                            class="btn btn-danger delete-student-btn">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <!-- Pagination Controls removed -->
-    </div>
-    
 
-    <!-- Modal for Adding Student -->
-    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <form method="post"  method="POST" action="{{ url_for('students.student_dashboard') }}" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="addStudentModalLabel">Add Student</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Only Accept: PNG, JPEG, and JPG</p>
-                        <!-- Form for Adding Student Data -->
-                        <div class="image-wrapper" style="width: 200px; height: 200px; position: relative; left: 50%; transform: translateX(-50%); border-radius: 50%; border: solid rgba(191, 94, 29, 0.523); overflow: hidden;">
-                            <label for="file-input" style="cursor: pointer; display: block; width: 100%; height: 100%;">
-                                <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="add" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
-                                <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
-                            </label>
-                            <input type="file" id="file-input" name="add_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'add')" required>
-                            <input id="student_url" data-form-type="add" name="student_url" hidden />
-                        </div>
+        <form id="filterForm" method="GET" action="{{ url_for('students.student_dashboard') }}">
+            <!-- preserve search query if present -->
+            {% if query %}<input type="hidden" name="query" value="{{ query }}">{% endif %}
 
-                        <div class="form-group">
-                            <label for="student_id">Student ID</label>
-                            <input name="student_id" type="text" class="form-control" id="student_id" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="first_name">First Name</label>
-                            <input name="first_name" type="text" class="form-control" id="first_name" autocomplete="given-name">
-                        </div>
-                        <div class="form-group">
-                            <label for="last_name">Last Name</label>
-                            <input name="last_name" type="text" class="form-control" id="last_name" autocomplete="family-name">
-                        </div>
-                        <div class="form-group">
-                            <label for="course_code">Course</label>
-                            <select name="course_code" class="form-control" id="course_code" required>
-                                <option value="" disabled selected>--Select Course Code--</option>
-                                {% for course in courses %}
-                                    <option value="{{ course.course_code }}">{{ course.course_code }}</option>
-                                {% endfor %}
-                            </select>   
-                        </div>                     
-                        <div class="form-group">
-                            <label for="year_level">Year Level</label>
-                            <select name="year_level" class="form-control" id="year_level">
-                                <option value="" disabled selected>--Select Year Level--</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="gender">Gender</label>
-                            <select name="gender" class="form-control" id="gender">
-                                <option value="" disabled selected>--Select Gender--</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-success">Save</button>
-                    </div>
+            <div class="filter-selects">
+                <!-- College -->
+                <div class="filter-group">
+                    <label for="f-college">College</label>
+                    <select name="college" id="f-college">
+                        <option value="">All Colleges</option>
+                        {% for c in colleges %}
+                            <option value="{{ c }}" {{ 'selected' if college == c else '' }}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Year Level -->
+                <div class="filter-group">
+                    <label for="f-year">Year Level</label>
+                    <select name="year" id="f-year">
+                        <option value="">All Years</option>
+                        <option value="1" {{ 'selected' if year == '1' else '' }}>Year 1</option>
+                        <option value="2" {{ 'selected' if year == '2' else '' }}>Year 2</option>
+                        <option value="3" {{ 'selected' if year == '3' else '' }}>Year 3</option>
+                        <option value="4" {{ 'selected' if year == '4' else '' }}>Year 4</option>
+                    </select>
+                </div>
+
+                <!-- Gender -->
+                <div class="filter-group">
+                    <label for="f-gender">Gender</label>
+                    <select name="gender_filter" id="f-gender">
+                        <option value="">All Genders</option>
+                        <option value="Male"   {{ 'selected' if gender_filter == 'Male' else '' }}>Male</option>
+                        <option value="Female" {{ 'selected' if gender_filter == 'Female' else '' }}>Female</option>
+                    </select>
+                </div>
+
+                <!-- Course -->
+                <div class="filter-group">
+                    <label for="f-course">Course</label>
+                    <select name="course_filter" id="f-course">
+                        <option value="">All Courses</option>
+                        {% for course in courses %}
+                            <option value="{{ course.course_code }}" {{ 'selected' if course_filter == course.course_code else '' }}>
+                                {{ course.course_code }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div class="filter-group">
+                    <label for="f-sort">Sort By</label>
+                    <select name="sort" id="f-sort">
+                        {% set sort_opts = [
+                            ('student_id', 'asc',  'Student ID (A → Z)'),
+                            ('student_id', 'desc', 'Student ID (Z → A)'),
+                            ('first_name', 'asc',  'First Name (A → Z)'),
+                            ('first_name', 'desc', 'First Name (Z → A)'),
+                            ('last_name',  'asc',  'Last Name (A → Z)'),
+                            ('last_name',  'desc', 'Last Name (Z → A)'),
+                            ('course_code','asc',  'Course (A → Z)'),
+                            ('course_code','desc', 'Course (Z → A)'),
+                            ('college_code','asc', 'College (A → Z)'),
+                            ('college_code','desc','College (Z → A)'),
+                            ('year_level', 'asc',  'Year Level (Low → High)'),
+                            ('year_level', 'desc', 'Year Level (High → Low)'),
+                            ('gender',     'asc',  'Gender (A → Z)'),
+                            ('gender',     'desc', 'Gender (Z → A)'),
+                        ] %}
+                        {% for s_col, s_ord, s_label in sort_opts %}
+                            <option value="{{ s_col }}|{{ s_ord }}"
+                                {{ 'selected' if sort == s_col and order == s_ord else '' }}>
+                                {{ s_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Apply button -->
+                <div class="filter-actions">
+                    <button type="submit" class="btn-apply-filter">Apply Filter</button>
                 </div>
             </div>
         </form>
     </div>
 
-    <!-- Modal for Updating Student -->
-    <div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <form method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="updateStudentModalLabel">Update Student</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="image-wrapper" style="width: 200px; height: 200px; position: relative; left: 50%; transform: translateX(-50%); border-radius: 50%; border: solid rgba(191, 94, 29, 0.523); overflow: hidden;">
-                        <label for="file-input-update" style="cursor: pointer; display: block; width: 100%; height: 100%;">
-                            <img src="{{ student_url or url_for('static', filename='download.jpg') }}" alt="Shop Photo" data-form-type="update" id="preview-image" class="circle-image" style="width: 100%; height: 100%; object-fit: cover;">
-                            <div class="overlay-text" style="font-size: 20px;">Upload Photo</div>
+    <!-- ── Table ── -->
+    {# Preserve all active params for pagination #}
+    {% set q_college     = '&college='       + college       if college       else '' %}
+    {% set q_year        = '&year='          + year          if year          else '' %}
+    {% set q_gender      = '&gender_filter=' + gender_filter if gender_filter else '' %}
+    {% set q_course      = '&course_filter=' + course_filter if course_filter else '' %}
+    {% set q_query       = '&query='         + query         if query         else '' %}
+    {% set extra = 'sort=' + sort + '&order=' + order + q_college + q_year + q_gender + q_course + q_query %}
+
+    <table class="table table-striped text-center">
+        <thead>
+            <tr>
+                <th>Profile Picture</th>
+                <th>Student ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Course</th>
+                <th>College</th>
+                <th>Year Level</th>
+                <th>Gender</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>
+                    <img src="{{ student.student_url if student.student_url else url_for('static', filename='download.jpg') }}"
+                         alt="Profile Photo"
+                         style="width:60px;height:60px;border-radius:50px;object-fit:cover;">
+                </td>
+                <td>{{ student.student_id }}</td>
+                <td>{{ student.first_name }}</td>
+                <td>{{ student.last_name }}</td>
+                <td>{{ student.course_code }}</td>
+                <td>{{ student.college_code }}</td>
+                <td>{{ student.year_level }}</td>
+                <td>{{ student.gender }}</td>
+                <td>
+                    <button
+                        class="btn btn-primary edit-student-btn"
+                        data-student-id="{{ student.student_id }}"
+                        data-first-name="{{ student.first_name }}"
+                        data-last-name="{{ student.last_name }}"
+                        data-course-code="{{ student.course_code }}"
+                        data-year-level="{{ student.year_level }}"
+                        data-gender="{{ student.gender }}"
+                        data-student-url="{{ student.student_url or '' }}"
+                    >Edit</button>
+                    <button
+                        class="btn btn-danger delete-student-btn"
+                        data-student-id="{{ student.student_id }}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {{ render_pagination(page, total, per_page, '/student/', extra_params=extra) }}
+</div>
+
+
+<!-- ── Add Student Modal ── -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('students.student_dashboard') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addStudentModalLabel">Add Student</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Only Accept: PNG, JPEG, and JPG</p>
+                    <div class="image-wrapper" style="width:200px;height:200px;position:relative;left:50%;transform:translateX(-50%);border-radius:50%;border:solid rgba(191,94,29,0.523);overflow:hidden;">
+                        <label for="add-file-input" style="cursor:pointer;display:block;width:100%;height:100%;">
+                            <img src="{{ url_for('static', filename='download.jpg') }}" alt="Profile Photo"
+                                 id="add-preview-image" style="width:100%;height:100%;object-fit:cover;">
+                            <div class="overlay-text" style="font-size:20px;">Upload Photo</div>
                         </label>
-                        <input type="file" id="file-input-update" name="update_student_photo" style="display: none;" accept="image/*" onchange="previewImage(event, 'update')" required>
-                        <input id="student_url" data-form-type="update" name="student_url" hidden />
+                        <input type="file" id="add-file-input" name="add_student_photo"
+                               style="display:none;" accept="image/*" onchange="previewImage(event,'add')">
+                        <input id="add-student-url" name="student_url" type="hidden" />
                     </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="student_id">Student ID</label>
-                            <input name="student_id" type="text" class="form-control" id="student_id" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="first_name">First Name</label>
-                            <input name="first_name" type="text" class="form-control" id="first_name" autocomplete="given-name">
-                        </div>
-                        <div class="form-group">
-                            <label for="last_name">Last Name</label>
-                            <input name="last_name" type="text" class="form-control" id="last_name" autocomplete="family-name">
-                        </div>
-                        <div class="form-group">
-                            <label for="course_code">Course</label>
-                            <select name="course_code" class="form-control" id="course_code" required>
-                                <option value="" disabled>--Select Course Code--</option>
-                                {% for course in courses %}
-                                    <option value="{{ course.course_code }}">{{ course.course_code }}</option>
-                                {% endfor %}
-                            </select>   
-                        </div>                     
-                        <div class="form-group">
-                            <label for="year_level">Year Level</label>
-                            <select name="year_level" class="form-control" id="year_level">
-                                <option value="" disabled>--Select Year Level--</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="gender">Gender</label>
-                            <select name="gender" class="form-control" id="gender">
-                                <option value="" disabled>--Select Gender--</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="add-student-id">Student ID</label>
+                        <input name="student_id" type="text" class="form-control" id="add-student-id" autocomplete="off">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="submit-button">Save</button>
+                    <div class="form-group">
+                        <label for="add-first-name">First Name</label>
+                        <input name="first_name" type="text" class="form-control" id="add-first-name" autocomplete="given-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-last-name">Last Name</label>
+                        <input name="last_name" type="text" class="form-control" id="add-last-name" autocomplete="family-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="add-course-code">Course</label>
+                        <select name="course_code" class="form-control" id="add-course-code" required>
+                            <option value="" disabled selected>--Select Course Code--</option>
+                            {% for course in courses %}
+                                <option value="{{ course.course_code }}">{{ course.course_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-year-level">Year Level</label>
+                        <select name="year_level" class="form-control" id="add-year-level">
+                            <option value="" disabled selected>--Select Year Level--</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add-gender">Gender</label>
+                        <select name="gender" class="form-control" id="add-gender">
+                            <option value="" disabled selected>--Select Gender--</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-        </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            populateDeleteCode()
+<!-- ── Update Student Modal ── -->
+<div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="updateStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="updateStudentForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateStudentModalLabel">Update Student</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="image-wrapper" style="width:200px;height:200px;position:relative;left:50%;transform:translateX(-50%);border-radius:50%;border:solid rgba(191,94,29,0.523);overflow:hidden;">
+                        <label for="upd-file-input" style="cursor:pointer;display:block;width:100%;height:100%;">
+                            <img src="{{ url_for('static', filename='download.jpg') }}" alt="Profile Photo"
+                                 id="upd-preview-image" style="width:100%;height:100%;object-fit:cover;">
+                            <div class="overlay-text" style="font-size:20px;">Upload Photo</div>
+                        </label>
+                        <input type="file" id="upd-file-input" name="update_student_photo"
+                               style="display:none;" accept="image/*" onchange="previewImage(event,'upd')">
+                        <input id="upd-student-url" name="student_url" type="hidden" />
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-student-id">Student ID</label>
+                        <input name="student_id" type="text" class="form-control" id="upd-student-id" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-first-name">First Name</label>
+                        <input name="first_name" type="text" class="form-control" id="upd-first-name" autocomplete="given-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-last-name">Last Name</label>
+                        <input name="last_name" type="text" class="form-control" id="upd-last-name" autocomplete="family-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-course-code">Course</label>
+                        <select name="course_code" class="form-control" id="upd-course-code" required>
+                            <option value="" disabled>--Select Course Code--</option>
+                            {% for course in courses %}
+                                <option value="{{ course.course_code }}">{{ course.course_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-year-level">Year Level</label>
+                        <select name="year_level" class="form-control" id="upd-year-level">
+                            <option value="" disabled>--Select Year Level--</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="upd-gender">Gender</label>
+                        <select name="gender" class="form-control" id="upd-gender">
+                            <option value="" disabled>--Select Gender--</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ── Filter panel toggle ──
+const filterPanel     = document.getElementById('filterPanel');
+const filterToggleBtn = document.getElementById('filterToggleBtn');
+
+filterToggleBtn.addEventListener('click', function () {
+    const isOpen = filterPanel.classList.toggle('open');
+    filterToggleBtn.classList.toggle('active', isOpen);
+});
+
+// Sync active class on load if panel starts open
+if (filterPanel.classList.contains('open')) {
+    filterToggleBtn.classList.add('active');
+}
+
+// ── Sort select: value is "col|order", split before submit ──
+const filterForm = document.getElementById('filterForm');
+filterForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const sortSelect = document.getElementById('f-sort');
+    const [sortCol, sortOrd] = sortSelect.value.split('|');
+
+    // Build URLSearchParams from the form, replace sort with split values
+    const params = new URLSearchParams(new FormData(filterForm));
+    params.delete('sort');
+    params.set('sort', sortCol);
+    params.set('order', sortOrd);
+
+    window.location.href = filterForm.action + '?' + params.toString();
+});
+
+// ── Clear all filters ──
+document.getElementById('clearFiltersBtn').addEventListener('click', function () {
+    window.location.href = '/student/';
+});
+
+// ── Edit button ──
+const updateStudentModalEl = document.getElementById('updateStudentModal');
+const updateStudentModal   = new bootstrap.Modal(updateStudentModalEl);
+const updateStudentForm    = document.getElementById('updateStudentForm');
+
+document.querySelectorAll('.edit-student-btn').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const studentId  = this.dataset.studentId;
+        const firstName  = this.dataset.firstName;
+        const lastName   = this.dataset.lastName;
+        const courseCode = this.dataset.courseCode;
+        const yearLevel  = this.dataset.yearLevel;
+        const gender     = this.dataset.gender;
+        const studentUrl = this.dataset.studentUrl;
+
+        updateStudentForm.action = '/student/update/' + studentId;
+        document.getElementById('upd-student-id').value  = studentId;
+        document.getElementById('upd-first-name').value  = firstName;
+        document.getElementById('upd-last-name').value   = lastName;
+        document.getElementById('upd-student-url').value = studentUrl;
+        document.getElementById('upd-preview-image').src = studentUrl || "{{ url_for('static', filename='download.jpg') }}";
+        document.getElementById('upd-course-code').value = courseCode;
+        document.getElementById('upd-year-level').value  = yearLevel;
+        document.getElementById('upd-gender').value      = gender;
+
+        updateStudentModal.show();
+    });
+});
+
+// ── Submit update ──
+updateStudentForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    fetch(updateStudentForm.action, {
+        method: 'POST',
+        body: new FormData(updateStudentForm)
+    }).then(function (res) {
+        if (res.ok) { updateStudentModal.hide(); window.location.reload(); }
+        else { alert('Error updating student.'); }
+    });
+});
+
+// ── Delete button ──
+function getCsrfToken() {
+    const el = document.querySelector('input[name="csrf_token"]');
+    return el ? el.value : '';
+}
+
+document.querySelectorAll('.delete-student-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const id = this.dataset.studentId;
+        if (!confirm('Are you sure you want to delete student ' + id + '?')) return;
+
+        const formData = new FormData();
+        formData.append('csrf_token', getCsrfToken());
+
+        fetch('/student/delete/' + id, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
         })
+        .then(function (res) {
+            if (!res.ok) { alert('Error deleting student.'); return; }
+            return res.json();
+        })
+        .then(function (data) {
+            if (data && data.success) { btn.closest('tr').remove(); }
+            else if (data) { alert(data.error || 'Error deleting student.'); }
+        })
+        .catch(function () { alert('Error deleting student.'); });
+    });
+});
 
-        const deleteModal = document.getElementById("deleteModal");
-        const deleteAnywayButton = deleteModal.querySelector(".btn-danger");
+// ── Image preview & Cloudinary upload ──
+async function previewImage(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        function populateDeleteCode() {
-            const deleteButtons = document.querySelectorAll("#confirmDeleteButton");
-            deleteButtons.forEach((button) => {
-                const studentid = button.dataset.studentId;
-                button.addEventListener("click", () => {
-                    deleteAnywayButton.dataset.studentId = studentid;
-                });
-            });
-        }
+    const previewId  = type === 'add' ? 'add-preview-image' : 'upd-preview-image';
+    const urlInputId = type === 'add' ? 'add-student-url'   : 'upd-student-url';
 
-        function deleteStudent() {
-            const studentid = deleteAnywayButton.dataset.studentId;
-            fetch("/student/delete/" + studentid, {
-                method: "DELETE"
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload()
-                }
-            })
-        }
+    const reader = new FileReader();
+    reader.onload = function (e) { document.getElementById(previewId).src = e.target.result; };
+    reader.readAsDataURL(file);
 
-        
-        const submitButton = document.getElementById('submit-button');
-        const updateModalDiv = document.getElementById("updateStudentModal");
-        const updateModal = new bootstrap.Modal(updateModalDiv, {});
-        
-        async function previewImage(event, type) {
-            const preview = document.querySelector(`img[id='preview-image'][data-form-type='${type}']`);
-            const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append("upload", file);
+    const formData = new FormData();
+    formData.append('upload', file);
 
-            try {
-                // Get CSRF token from any rendered form on the page
-                const csrfInput = document.querySelector("input[name='csrf_token']");
-                const csrfToken = csrfInput ? csrfInput.value : null;
-
-                const response = await fetch("{{ url_for('students.upload_student_image') }}", {
-                    method: "POST",
-                    body: formData,
-                    headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
-                    credentials: 'same-origin'
-                });
-
-                // Try to parse JSON response even when response not ok to show server error
-                const data = await response.json().catch(() => null);
-
-                if (!response.ok) {
-                    if (response.status === 413) {
-                        // Handle 413 (Payload Too Large) error
-                        alert((data && data.error) ? data.error : "Image is too large.");
-                    } else {
-                        alert((data && data.error) ? data.error : "An error occurred while uploading the image.");
-                    }
-                    return;
-                }
-
-                if (data && data.is_success) {
-                    const studentImageUrlInput = document.querySelector(`input[name='student_url'][data-form-type='${type}']`);
-                    if (studentImageUrlInput) studentImageUrlInput.value = data.url;
-                } else if (data && !data.is_success) {
-                    alert(data.error || 'Upload failed');
-                    return;
-                }
-
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                };
-
-                reader.readAsDataURL(file);
-            } catch (error) {
-                alert("An unexpected error occurred: " + error.message);
-            }
-        }
-        
-        const updateButtons = document.querySelectorAll("#update-student");
-        
-        updateButtons.forEach((button) => {
-            const studentid = button.dataset.studentId;
-            const firstName = button.dataset.firstName;
-            const lastName = button.dataset.lastName;
-            const courseCode = button.dataset.courseCode;
-            const yearLevel = button.dataset.yearLevel;
-            const gender = button.dataset.gender;
-            const student_url = button.dataset.studentUrl;
-        
-            button.addEventListener("click", () => {
-                updateModal.show();
-                updateModalDiv.querySelector("form").action = "/student/update/" + studentid;
-                updateModalDiv.querySelector("input[name='student_id']").value = studentid;
-                updateModalDiv.querySelector("input[name='first_name']").value = firstName;
-                updateModalDiv.querySelector("input[name='last_name']").value = lastName;
-                updateModalDiv.querySelector("input[name='student_url']").value = student_url;
-                
-                document.querySelector("img[id='preview-image'][data-form-type='update']").src = student_url;
-                const courseSelect = updateModalDiv.querySelector("select[name='course_code']")
-                for (const option of courseSelect.options) {
-                    if (option.value === courseCode) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-        
-                const yearLevelSelect = updateModalDiv.querySelector("select[name='year_level']")
-                for (const option of yearLevelSelect.options) {
-                    if (option.value === yearLevel) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-        
-                const genderSelect = updateModalDiv.querySelector("select[name='gender']")
-                for (const option of genderSelect.options) {
-                    if (option.value === gender) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-            });
+    try {
+        const response = await fetch("{{ url_for('students.upload_student_image') }}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': getCsrfToken() },
+            credentials: 'same-origin'
         });
-
-        // Show alert on update
-        const updateStudentForm = document.getElementById("updateStudentModal")?.querySelector('form');
-        if (updateStudentForm) {
-            updateStudentForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                fetch(updateStudentForm.action, {
-                    method: 'POST',
-                    body: new FormData(updateStudentForm)
-                }).then(res => {
-                    if (res.ok) {
-                        alert('Student is already updated!');
-                        window.location.reload();
-                    }
-                });
-            });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || (data && !data.is_success)) {
+            alert((data && data.error) ? data.error : 'Upload failed.');
+            return;
         }
-
-        // Get CSRF token from hidden input (handle multiple forms)
-        function getCsrfToken() {
-            const csrfInput = document.querySelector('input[name="csrf_token"]');
-            return csrfInput ? csrfInput.value : '';
-        }
-
-        // Delete Student (with CSRF token)
-        document.querySelectorAll('.delete-student-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.dataset.studentId;
-                if (confirm('Are you sure you want to delete student ' + id + '?')) {
-                    const formData = new FormData();
-                    formData.append('csrf_token', getCsrfToken());
-                    fetch('/student/delete/' + id, {
-                        method: 'POST',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: formData
-                    })
-                        .then(res => {
-                            // Handle redirect (302) or non-JSON error gracefully
-                            if (!res.ok) {
-                                alert('Error deleting student.');
-                                return Promise.reject('Request failed');
-                            }
-                            const contentType = res.headers.get('content-type');
-                            if (contentType && contentType.includes('application/json')) {
-                                return res.json();
-                            } else {
-                                alert('Error deleting student.');
-                                return Promise.reject('Invalid JSON response');
-                            }
-                        })
-                        .then(data => {
-                            if (data && data.success) {
-                                // Remove the row from the table
-                                const row = btn.closest('tr');
-                                if (row) row.remove();
-                                alert('Student deleted successfully!');
-                            }
-                        })
-                        .catch(() => {
-                            // Error already handled above
-                        });
-                }
-            });
-        });
-    </script>
+        if (data && data.url) { document.getElementById(urlInputId).value = data.url; }
+    } catch (err) {
+        alert('An unexpected error occurred: ' + err.message);
+    }
+}
+</script>
 {% endblock content %}

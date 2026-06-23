@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
+{% from "pagination.html" import render as render_pagination %}
 
 {% block content %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <div class="alert alert-info alert-dismissible fade show" role="alert">
-    {{ messages [0] }}
+    {{ messages[0] }}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
@@ -14,7 +15,7 @@
     <div class="row mb-4">
         <div class="col-9">
             <form action="{{ url_for('courses.course_search') }}" method="GET" class="input-group">
-                <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2" value="{{query}}">
+                <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" value="{{ query if query else '' }}">
                 <div class="input-group-append">
                     <button class="btn btn-primary" type="submit">Search</button>
                 </div>
@@ -37,16 +38,15 @@
             {% for course in courses %}
                 <tr>
                     <td>{{ course.course_code }}</td>
-                    <td>{{ course.course_name}}</td>
-                    <td>{{ course.college_code}}</td>
+                    <td>{{ course.course_name }}</td>
+                    <td>{{ course.college_code }}</td>
                     <td>
-                        <button 
-                            id="update-course"
-                            class="btn btn-primary"
+                        <button
+                            class="btn btn-primary edit-course-btn"
                             data-course-code="{{ course.course_code }}"
                             data-course-name="{{ course.course_name }}"
                             data-college-code="{{ course.college_code }}"
-                            >Edit</button>
+                        >Edit</button>
                         <button
                             data-course-code="{{ course.course_code }}"
                             class="btn btn-danger delete-course-btn">
@@ -57,162 +57,152 @@
             {% endfor %}
         </tbody>
     </table>
+    {{ render_pagination(page, total, per_page, '/course/', extra_params='query=' + query if query else '') }}
 </div>
 
-  <!-- Modal for Adding Course -->
-  <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
-    <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-dialog">
+<!-- Modal for Adding Course -->
+<div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-            <h1 class="modal-title fs-5" id="addCourseModalLabel">Add Course</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="course_code">Course Code</label>
-                    <input name="course_code" type="text" class="form-control" id="course_code">
-                </div>
-                <div class="form-group">
-                    <label for="course_name">Course Name</label>
-                    <input name="course_name" type="text" class="form-control" id="course_name">
-                </div>
-                <div class="form-group">
-                    <label for="college_code">College Code</label>
-                    <select name="college_code" class="form-control" id="college_code" required>
-                        <option value="" disabled selected>--Select College Code--</option>
-                        {% for college in colleges %}
-                            <option value="{{ college.college_code }}">{{ college.college_code }}</option>
-                        {% endfor %}
-                    </select>   
-                </div>
-            </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-success">Save</button>
-            </div>
-        </div>
-        </div>
-        </form>
-    </div>
-
-    <!-- Modal for Updating Course-->
-    <div class="modal fade" id="updateCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
-        <form method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="modal-dialog">
-            <div class="modal-content">
+            <form method="post" action="{{ url_for('courses.course_dashboard') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
-                <h1 class="modal-title fs-5" id="updateCourseModalLabel">Update Course</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h1 class="modal-title fs-5" id="addCourseModalLabel">Add Course</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="course_code">Course Code</label>
-                        <input name="course_code" type="text" class="form-control" id="course_code">
+                        <label for="add_course_code">Course Code</label>
+                        <input name="course_code" type="text" class="form-control" id="add_course_code">
                     </div>
                     <div class="form-group">
-                        <label for="course_name">Course Name</label>
-                        <input name="course_name" type="text" class="form-control" id="course_name">
+                        <label for="add_course_name">Course Name</label>
+                        <input name="course_name" type="text" class="form-control" id="add_course_name">
                     </div>
                     <div class="form-group">
-                        <label for="college_code">College Code</label>
-                        <select name="college_code" class="form-control" id="college_code" required>
+                        <label for="add_college_code">College Code</label>
+                        <select name="college_code" class="form-control" id="add_college_code" required>
                             <option value="" disabled selected>--Select College Code--</option>
                             {% for college in colleges %}
                                 <option value="{{ college.college_code }}">{{ college.college_code }}</option>
                             {% endfor %}
-                        </select>   
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-success">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save</button>
                 </div>
-            </div>
-            </div>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- Modal for Updating Course -->
+<div class="modal fade" id="updateCourseModal" tabindex="-1" aria-labelledby="updateCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="updateCourseForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateCourseModalLabel">Update Course</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="upd_course_code">Course Code</label>
+                        <input name="course_code" type="text" class="form-control" id="upd_course_code">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd_course_name">Course Name</label>
+                        <input name="course_name" type="text" class="form-control" id="upd_course_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="upd_college_code">College Code</label>
+                        <select name="college_code" class="form-control" id="upd_college_code" required>
+                            <option value="" disabled>--Select College Code--</option>
+                            {% for college in colleges %}
+                                <option value="{{ college.college_code }}">{{ college.college_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
-// Edit Course Modal
-const updateCourseButtons = document.querySelectorAll('#update-course');
-const updateCourseModalDiv = document.getElementById('updateCourseModal');
-const updateCourseModal = updateCourseModalDiv ? new bootstrap.Modal(updateCourseModalDiv, {}) : null;
-
-updateCourseButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-        if (!updateCourseModal) return;
-        updateCourseModal.show();
-        updateCourseModalDiv.querySelector('form').action = '/course/update/' + button.dataset.courseCode;
-        updateCourseModalDiv.querySelector("input[name='course_code']").value = button.dataset.courseCode;
-        updateCourseModalDiv.querySelector("input[name='course_name']").value = button.dataset.courseName;
-        updateCourseModalDiv.querySelector("select[name='college_code']").value = button.dataset.collegeCode;
-    });
-});
-
-// Show alert on update
-const updateCourseForm = updateCourseModalDiv ? updateCourseModalDiv.querySelector('form') : null;
-if (updateCourseForm) {
-    updateCourseForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        fetch(updateCourseForm.action, {
-            method: 'POST',
-            body: new FormData(updateCourseForm)
-        }).then(res => {
-            if (res.ok) {
-                alert('Course is already updated!');
-                window.location.reload();
-            }
-        });
-    });
-}
-
-// Get CSRF token from hidden input (handle multiple forms)
 function getCsrfToken() {
     const csrfInput = document.querySelector('input[name="csrf_token"]');
     return csrfInput ? csrfInput.value : '';
 }
 
-// Delete Course (with CSRF token)
-document.querySelectorAll('.delete-course-btn').forEach(btn => {
+const updateCourseModalEl = document.getElementById('updateCourseModal');
+const updateCourseModal = new bootstrap.Modal(updateCourseModalEl);
+const updateCourseForm = document.getElementById('updateCourseForm');
+
+// Edit buttons — use class so all rows work
+document.querySelectorAll('.edit-course-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const courseCode  = this.dataset.courseCode;
+        const courseName  = this.dataset.courseName;
+        const collegeCode = this.dataset.collegeCode;
+
+        updateCourseForm.action = '/course/update/' + courseCode;
+        document.getElementById('upd_course_code').value = courseCode;
+        document.getElementById('upd_course_name').value = courseName;
+        document.getElementById('upd_college_code').value = collegeCode;
+        updateCourseModal.show();
+    });
+});
+
+// Submit update via fetch
+updateCourseForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(updateCourseForm.action, {
+        method: 'POST',
+        body: new FormData(updateCourseForm)
+    }).then(function(res) {
+        if (res.ok) {
+            updateCourseModal.hide();
+            window.location.reload();
+        } else {
+            alert('Error updating course.');
+        }
+    });
+});
+
+// Delete buttons
+document.querySelectorAll('.delete-course-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const code = this.dataset.courseCode;
-        if (confirm('Are you sure you want to delete ' + code + '?')) {
-            const formData = new FormData();
-            formData.append('csrf_token', getCsrfToken());
-            fetch('/course/delete/' + code, { // <-- changed from /courses/delete/ to /course/delete/
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            })
-                .then(res => {
-                    // Handle redirect (302) or non-JSON error gracefully
-                    if (!res.ok) {
-                        alert('Error deleting course.');
-                        return Promise.reject('Request failed');
-                    }
-                    const contentType = res.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return res.json();
-                    } else {
-                        alert('Error deleting course.');
-                        return Promise.reject('Invalid JSON response');
-                    }
-                })
-                .then(data => {
-                    if (data && data.success) {
-                        // Remove the row from the table
-                        const row = btn.closest('tr');
-                        if (row) row.remove();
-                        alert('Course deleted successfully!');
-                    }
-                })
-                .catch(() => {
-                    // Error already handled above
-                });
-        }
+        if (!confirm('Are you sure you want to delete ' + code + '?')) return;
+
+        const formData = new FormData();
+        formData.append('csrf_token', getCsrfToken());
+
+        fetch('/course/delete/' + code, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(function(res) {
+            if (!res.ok) { alert('Error deleting course.'); return; }
+            return res.json();
+        })
+        .then(function(data) {
+            if (data && data.success) {
+                btn.closest('tr').remove();
+            } else if (data) {
+                alert(data.error || 'Error deleting course.');
+            }
+        })
+        .catch(function() { alert('Error deleting course.'); });
     });
 });
 </script>

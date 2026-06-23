@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
+{% from "pagination.html" import render as render_pagination %}
 
 {% block content %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <div class="alert alert-info alert-dismissible fade show" role="alert">
-    {{ messages [0] }}
+    {{ messages[0] }}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
@@ -14,7 +15,7 @@
         <div class="row mb-4">
             <div class="col-9">
                 <form action="{{ url_for('college.college_search') }}" method="GET" class="input-group">
-                    <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon2" value="{{query}}">
+                    <input name="query" type="text" class="form-control" placeholder="Search" aria-label="Search" value="{{ query if query else '' }}">
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="submit">Search</button>
                     </div>
@@ -36,11 +37,10 @@
                 {% for college in colleges %}
                 <tr>
                     <td>{{ college.college_code }}</td>
-                    <td>{{ college.college_name}}</td>
+                    <td>{{ college.college_name }}</td>
                     <td>
                         <button
-                            id="update-college"
-                            class="btn btn-primary"
+                            class="btn btn-primary edit-college-btn"
                             data-college-name="{{ college.college_name }}"
                             data-college-code="{{ college.college_code }}"
                         >Edit</button>
@@ -54,146 +54,131 @@
                 {% endfor %}
             </tbody>
         </table>
-        <!-- Pagination Controls removed -->
+        {{ render_pagination(page, total, per_page, '/college/', extra_params='query=' + query if query else '') }}
     </div>
-    
 
     <!-- Modal for Adding College -->
-<div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
-    <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="addCollegeModalLabel">Add College</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="add_college_code">College Code</label>
-                        <input name="college_code" type="text" class="form-control" id="add_college_code" autocomplete="off">
+                <form method="post" action="{{ url_for('college.college_dashboard') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="addCollegeModalLabel">Add College</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="form-group">
-                        <label for="add_college_name">College Name</label>
-                        <input name="college_name" type="text" class="form-control" id="add_college_name" autocomplete="off">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="add_college_code">College Code</label>
+                            <input name="college_code" type="text" class="form-control" id="add_college_code" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="add_college_name">College Name</label>
+                            <input name="college_name" type="text" class="form-control" id="add_college_name" autocomplete="off">
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </form>
-</div>
+    </div>
 
-
-   <!-- Modal for Update College -->
-<div class="modal fade" id="updateCollegeModal" tabindex="-1" aria-labelledby="updateCollegeModalLabel" aria-hidden="true">
-    <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <!-- Modal for Update College -->
+    <div class="modal fade" id="updateCollegeModal" tabindex="-1" aria-labelledby="updateCollegeModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="updateCollegeModalLabel">Update College</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="update_college_code">College Code</label>
-                        <input name="college_code" type="text" class="form-control" id="update_college_code" autocomplete="off">
+                <form method="post" id="updateCollegeForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="updateCollegeModalLabel">Update College</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="form-group">
-                        <label for="update_college_name">College Name</label>
-                        <input name="college_name" type="text" class="form-control" id="update_college_name" autocomplete="off">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="update_college_code">College Code</label>
+                            <input name="college_code" type="text" class="form-control" id="update_college_code" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="update_college_name">College Name</label>
+                            <input name="college_name" type="text" class="form-control" id="update_college_name" autocomplete="off">
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </form>
-</div>
+    </div>
 
 <script>
-// Get CSRF token from hidden input (handle multiple forms)
 function getCsrfToken() {
     const csrfInput = document.querySelector('input[name="csrf_token"]');
     return csrfInput ? csrfInput.value : '';
 }
 
-// Edit College Modal
-const updateCollegeButtons = document.querySelectorAll('#update-college');
-const updateCollegeModalDiv = document.getElementById('updateCollegeModal');
-const updateCollegeModal = updateCollegeModalDiv ? new bootstrap.Modal(updateCollegeModalDiv, {}) : null;
+const updateCollegeModalEl = document.getElementById('updateCollegeModal');
+const updateCollegeModal = new bootstrap.Modal(updateCollegeModalEl);
+const updateCollegeForm = document.getElementById('updateCollegeForm');
 
-updateCollegeButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-        if (!updateCollegeModal) return;
+// Edit buttons — use class, not id, so all rows work
+document.querySelectorAll('.edit-college-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const code = this.dataset.collegeCode;
+        const name = this.dataset.collegeName;
+        updateCollegeForm.action = '/college/update/' + code;
+        document.getElementById('update_college_code').value = code;
+        document.getElementById('update_college_name').value = name;
         updateCollegeModal.show();
-        updateCollegeModalDiv.querySelector('form').action = '/college/update/' + button.dataset.collegeCode;
-        updateCollegeModalDiv.querySelector("input[name='college_code']").value = button.dataset.collegeCode;
-        updateCollegeModalDiv.querySelector("input[name='college_name']").value = button.dataset.collegeName;
     });
 });
 
-// Show alert on update
-const updateCollegeForm = updateCollegeModalDiv ? updateCollegeModalDiv.querySelector('form') : null;
-if (updateCollegeForm) {
-    updateCollegeForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        fetch(updateCollegeForm.action, {
-            method: 'POST',
-            body: new FormData(updateCollegeForm)
-        }).then(res => {
-            if (res.ok) {
-                alert('College is already updated!');
-                window.location.reload();
-            }
-        });
+// Submit update via fetch so we can show a message then reload
+updateCollegeForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch(updateCollegeForm.action, {
+        method: 'POST',
+        body: new FormData(updateCollegeForm)
+    }).then(function(res) {
+        if (res.ok) {
+            updateCollegeModal.hide();
+            window.location.reload();
+        } else {
+            alert('Error updating college.');
+        }
     });
-}
+});
 
-// Delete College (with CSRF token)
-document.querySelectorAll('.delete-college-btn').forEach(btn => {
+// Delete buttons
+document.querySelectorAll('.delete-college-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const code = this.dataset.collegeCode;
-        if (confirm('Are you sure you want to delete ' + code + '?')) {
-            const formData = new FormData();
-            formData.append('csrf_token', getCsrfToken());
-            fetch('/college/delete/' + code, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: formData
-            })
-                .then(res => {
-                    // Handle redirect (302) or non-JSON error gracefully
-                    if (!res.ok) {
-                        alert('Error deleting college.');
-                        return Promise.reject('Request failed');
-                    }
-                    const contentType = res.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return res.json();
-                    } else {
-                        alert('Error deleting college.');
-                        return Promise.reject('Invalid JSON response');
-                    }
-                })
-                .then(data => {
-                    if (data && data.success) {
-                        // Remove the row from the table
-                        const row = btn.closest('tr');
-                        if (row) row.remove();
-                        alert('College deleted successfully!');
-                    }
-                })
-                .catch(() => {
-                    // Error already handled above
-                });
-        }
+        if (!confirm('Are you sure you want to delete ' + code + '?')) return;
+
+        const formData = new FormData();
+        formData.append('csrf_token', getCsrfToken());
+
+        fetch('/college/delete/' + code, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
+        })
+        .then(function(res) {
+            if (!res.ok) { alert('Error deleting college.'); return; }
+            return res.json();
+        })
+        .then(function(data) {
+            if (data && data.success) {
+                btn.closest('tr').remove();
+            } else if (data) {
+                alert(data.error || 'Error deleting college.');
+            }
+        })
+        .catch(function() { alert('Error deleting college.'); });
     });
 });
 </script>

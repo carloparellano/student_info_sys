@@ -62,5 +62,10 @@ def college_search():
     if not query:
         return redirect("/college/")
 
-    colleges = search_colleges(query)
-    return render_template("college.html", colleges=colleges, query=query)
+    page = int(request.args.get("page", 1))
+    per_page = 10
+    form = CollegeForm()
+    colleges = search_colleges(query, page=page, per_page=per_page)
+    total = search_colleges_count(query)
+    return render_template("college.html", colleges=colleges, form=form, query=query,
+                           page=page, per_page=per_page, total=total)
