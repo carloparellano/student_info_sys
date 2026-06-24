@@ -344,7 +344,14 @@
                     </div>
                     <div class="form-group">
                         <label for="add-student-id">Student ID</label>
-                        <input name="student_id" type="text" class="form-control" id="add-student-id" autocomplete="off">
+                        <input name="student_id" type="text" class="form-control" id="add-student-id"
+                               autocomplete="off" placeholder="e.g. 2021-1234"
+                               pattern="^\d{4}-\d{4}$"
+                               title="Format: YYYY-NNNN (e.g. 2021-1234)"
+                               required>
+                        <small class="text-danger" id="student-id-error" style="display:none;">
+                            Student ID must follow the format YYYY-NNNN (e.g. 2021-1234)
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="add-first-name">First Name</label>
@@ -414,7 +421,14 @@
                     </div>
                     <div class="form-group">
                         <label for="upd-student-id">Student ID</label>
-                        <input name="student_id" type="text" class="form-control" id="upd-student-id" autocomplete="off">
+                        <input name="student_id" type="text" class="form-control" id="upd-student-id"
+                               autocomplete="off" placeholder="e.g. 2021-1234"
+                               pattern="^\d{4}-\d{4}$"
+                               title="Format: YYYY-NNNN (e.g. 2021-1234)"
+                               required>
+                        <small class="text-danger" id="upd-student-id-error" style="display:none;">
+                            Student ID must follow the format YYYY-NNNN (e.g. 2021-1234)
+                        </small>
                     </div>
                     <div class="form-group">
                         <label for="upd-first-name">First Name</label>
@@ -498,6 +512,37 @@ document.getElementById('clearFiltersBtn').addEventListener('click', function ()
     window.location.href = '/student/';
 });
 
+// ── Student ID format validation (add + update forms) ──
+function validateStudentId(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    const pattern = /^\d{4}-\d{4}$/;
+    if (!pattern.test(input.value.trim())) {
+        input.classList.add('is-invalid');
+        error.style.display = 'block';
+        return false;
+    }
+    input.classList.remove('is-invalid');
+    error.style.display = 'none';
+    return true;
+}
+
+// Live feedback as user types
+document.getElementById('add-student-id').addEventListener('input', function () {
+    validateStudentId('add-student-id', 'student-id-error');
+});
+document.getElementById('upd-student-id').addEventListener('input', function () {
+    validateStudentId('upd-student-id', 'upd-student-id-error');
+});
+
+// Block add form submission if invalid
+document.querySelector('#addStudentModal form').addEventListener('submit', function (e) {
+    if (!validateStudentId('add-student-id', 'student-id-error')) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+});
+
 // ── Edit button ──
 const updateStudentModalEl = document.getElementById('updateStudentModal');
 const updateStudentModal   = new bootstrap.Modal(updateStudentModalEl);
@@ -530,6 +575,7 @@ document.querySelectorAll('.edit-student-btn').forEach(function (button) {
 // ── Submit update ──
 updateStudentForm.addEventListener('submit', function (e) {
     e.preventDefault();
+    if (!validateStudentId('upd-student-id', 'upd-student-id-error')) return;
     fetch(updateStudentForm.action, {
         method: 'POST',
         body: new FormData(updateStudentForm)
