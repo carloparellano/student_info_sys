@@ -138,7 +138,7 @@
     <h1 class="mb-4">Student Information</h1>
 
     <!-- ── Row 1: Search + Filters toggle + Add Student ── -->
-    {% set active_count = (1 if college else 0) + (1 if year else 0) + (1 if gender_filter else 0) + (1 if course_filter else 0) + (1 if sort != 'student_id' or order != 'asc' else 0) %}
+    {% set active_count = (1 if college else 0) + (1 if year else 0) + (1 if gender_filter else 0) + (1 if course_filter else 0) %}
     <div class="d-flex align-items-center gap-2 mb-2">
         <!-- Search (grows to fill available space) -->
         <form action="{{ url_for('students.student_search') }}" method="GET"
@@ -163,7 +163,7 @@
     </div>
 
     <!-- ── Filter Panel ── -->
-    <div id="filterPanel" class="filter-panel{% if college or year or gender_filter or course_filter or sort != 'student_id' or order != 'asc' %} open{% endif %}">        <div class="filter-panel-header">
+    <div id="filterPanel" class="filter-panel{% if college or year or gender_filter or course_filter %} open{% endif %}">        <div class="filter-panel-header">
             <span>Filters</span>
             <button class="filter-clear-btn" id="clearFiltersBtn" type="button">✕ Clear all</button>
         </div>
@@ -219,35 +219,6 @@
                     </select>
                 </div>
 
-                <!-- Sort By -->
-                <div class="filter-group">
-                    <label for="f-sort">Sort By</label>
-                    <select name="sort" id="f-sort">
-                        {% set sort_opts = [
-                            ('student_id', 'asc',  'Student ID (A → Z)'),
-                            ('student_id', 'desc', 'Student ID (Z → A)'),
-                            ('first_name', 'asc',  'First Name (A → Z)'),
-                            ('first_name', 'desc', 'First Name (Z → A)'),
-                            ('last_name',  'asc',  'Last Name (A → Z)'),
-                            ('last_name',  'desc', 'Last Name (Z → A)'),
-                            ('course_code','asc',  'Course (A → Z)'),
-                            ('course_code','desc', 'Course (Z → A)'),
-                            ('college_code','asc', 'College (A → Z)'),
-                            ('college_code','desc','College (Z → A)'),
-                            ('year_level', 'asc',  'Year Level (Low → High)'),
-                            ('year_level', 'desc', 'Year Level (High → Low)'),
-                            ('gender',     'asc',  'Gender (A → Z)'),
-                            ('gender',     'desc', 'Gender (Z → A)'),
-                        ] %}
-                        {% for s_col, s_ord, s_label in sort_opts %}
-                            <option value="{{ s_col }}|{{ s_ord }}"
-                                {{ 'selected' if sort == s_col and order == s_ord else '' }}>
-                                {{ s_label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
                 <!-- Apply button -->
                 <div class="filter-actions">
                     <button type="submit" class="btn-apply-filter">Apply Filter</button>
@@ -257,25 +228,41 @@
     </div>
 
     <!-- ── Table ── -->
-    {# Preserve all active params for pagination #}
+    {# Preserve all active params for pagination and sort links #}
     {% set q_college     = '&college='       + college       if college       else '' %}
     {% set q_year        = '&year='          + year          if year          else '' %}
     {% set q_gender      = '&gender_filter=' + gender_filter if gender_filter else '' %}
     {% set q_course      = '&course_filter=' + course_filter if course_filter else '' %}
     {% set q_query       = '&query='         + query         if query         else '' %}
     {% set extra = 'sort=' + sort + '&order=' + order + q_college + q_year + q_gender + q_course + q_query %}
+    {% set filters = q_college + q_year + q_gender + q_course + q_query %}
 
     <table class="table table-striped text-center">
         <thead>
             <tr>
                 <th>Profile Picture</th>
-                <th>Student ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Course</th>
-                <th>College</th>
-                <th>Year Level</th>
-                <th>Gender</th>
+                {% for col, label in [
+                    ('student_id',  'Student ID'),
+                    ('first_name',  'First Name'),
+                    ('last_name',   'Last Name'),
+                    ('course_code', 'Course'),
+                    ('college_code','College'),
+                    ('year_level',  'Year Level'),
+                    ('gender',      'Gender')
+                ] %}
+                {% set next_ord = 'desc' if (sort == col and order == 'asc') else 'asc' %}
+                <th>
+                    <a href="/student/?sort={{ col }}&order={{ next_ord }}{{ filters }}"
+                       class="text-dark text-decoration-none fw-semibold">
+                        {{ label }}
+                        {% if sort == col %}
+                            <span style="color:#7e2811;font-size:0.75rem;">{{ '▲' if order == 'asc' else '▼' }}</span>
+                        {% else %}
+                            <span style="color:#ccc;font-size:0.75rem;">⇅</span>
+                        {% endif %}
+                    </a>
+                </th>
+                {% endfor %}
                 <th>Action</th>
             </tr>
         </thead>
@@ -491,19 +478,14 @@ if (filterPanel.classList.contains('open')) {
     filterToggleBtn.classList.add('active');
 }
 
-// ── Sort select: value is "col|order", split before submit ──
+// ── Filter form submit ──
 const filterForm = document.getElementById('filterForm');
 filterForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    const sortSelect = document.getElementById('f-sort');
-    const [sortCol, sortOrd] = sortSelect.value.split('|');
-
-    // Build URLSearchParams from the form, replace sort with split values
+    // Preserve current sort/order when applying filters
     const params = new URLSearchParams(new FormData(filterForm));
-    params.delete('sort');
-    params.set('sort', sortCol);
-    params.set('order', sortOrd);
-
+    params.set('sort', '{{ sort }}');
+    params.set('order', '{{ order }}');
     window.location.href = filterForm.action + '?' + params.toString();
 });
 
@@ -619,7 +601,7 @@ document.querySelectorAll('.delete-student-btn').forEach(function (btn) {
 // ── Image preview & Cloudinary upload ──
 const DEFAULT_IMG = "{{ url_for('static', filename='download.jpg') }}";
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_SIZE = 2 * 1024 * 1024; // 1MB
 
 async function previewImage(event, type) {
     const file = event.target.files[0];

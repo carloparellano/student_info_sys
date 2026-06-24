@@ -55,8 +55,8 @@ def get_students(page=1, per_page=10, sort="student_id", order="asc",
                student.course_code, student.year_level, student.gender,
                course.college_code, student.student_url
         FROM student
-        JOIN course  ON student.course_code  = course.course_code
-        JOIN college ON course.college_code  = college.college_code
+        LEFT JOIN course  ON student.course_code  = course.course_code
+        LEFT JOIN college ON course.college_code  = college.college_code
         {where}
         ORDER BY {sort_col} {order_dir}
         LIMIT %s OFFSET %s;
@@ -84,7 +84,7 @@ def get_students_count(college=None, year=None, gender=None, course=None):
         where = "WHERE " + " AND ".join(filters)
         cur.execute(f"""
             SELECT COUNT(*) FROM student
-            JOIN course ON student.course_code = course.course_code
+            LEFT JOIN course ON student.course_code = course.course_code
             {where}
         """, params)
     else:
@@ -182,8 +182,8 @@ def search_students(query, page=1, per_page=10, sort="student_id", order="asc"):
             course.college_code,
             student.student_url
         FROM student
-        JOIN course  ON student.course_code = course.course_code
-        JOIN college ON course.college_code = college.college_code
+        LEFT JOIN course  ON student.course_code = course.course_code
+        LEFT JOIN college ON course.college_code = college.college_code
         WHERE
             student.student_id  LIKE %s
             OR student.first_name   LIKE %s
@@ -236,10 +236,10 @@ def upload_student_file(file):
     if ext not in allowed:
         return {'is_success': False, 'error': 'Only PNG, JPG, and JPEG files are allowed'}
 
-    # Check file size (2MB limit)
+    # Check file size (1MB limit)
     data = file.read()
-    if len(data) > 2_000_000:
-        return {'is_success': False, 'error': 'File too large (max 2MB)'}
+    if len(data) > 1_000_000:
+        return {'is_success': False, 'error': 'File too large (max 1MB)'}
 
     file.seek(0)
     try:
