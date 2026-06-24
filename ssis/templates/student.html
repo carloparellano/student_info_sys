@@ -617,17 +617,45 @@ document.querySelectorAll('.delete-student-btn').forEach(function (btn) {
 });
 
 // ── Image preview & Cloudinary upload ──
+const DEFAULT_IMG = "{{ url_for('static', filename='download.jpg') }}";
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
 async function previewImage(event, type) {
     const file = event.target.files[0];
-    if (!file) return;
-
     const previewId  = type === 'add' ? 'add-preview-image' : 'upd-preview-image';
     const urlInputId = type === 'add' ? 'add-student-url'   : 'upd-student-url';
+    const inputEl    = event.target;
 
+    // Helper: reset everything back to default
+    function resetPreview() {
+        document.getElementById(previewId).src = DEFAULT_IMG;
+        document.getElementById(urlInputId).value = '';
+        inputEl.value = ''; // clear file input so same file can be re-selected
+    }
+
+    if (!file) return;
+
+    // ── 1. Check file type ──
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        alert('Invalid file type. Only PNG, JPG, and JPEG images are allowed.');
+        resetPreview();
+        return;
+    }
+
+    // ── 2. Check file size (2MB max) ──
+    if (file.size > MAX_SIZE) {
+        alert('Image is too large. Maximum allowed size is 2MB.');
+        resetPreview();
+        return;
+    }
+
+    // ── 3. Show local preview immediately ──
     const reader = new FileReader();
     reader.onload = function (e) { document.getElementById(previewId).src = e.target.result; };
     reader.readAsDataURL(file);
 
+    // ── 4. Upload to Cloudinary via server ──
     const formData = new FormData();
     formData.append('upload', file);
 
@@ -641,11 +669,13 @@ async function previewImage(event, type) {
         const data = await response.json().catch(() => null);
         if (!response.ok || (data && !data.is_success)) {
             alert((data && data.error) ? data.error : 'Upload failed.');
+            resetPreview();
             return;
         }
         if (data && data.url) { document.getElementById(urlInputId).value = data.url; }
     } catch (err) {
         alert('An unexpected error occurred: ' + err.message);
+        resetPreview();
     }
 }
 </script>

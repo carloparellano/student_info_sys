@@ -227,15 +227,23 @@ def upload_student_file(file):
     Upload a student image to Cloudinary.
     Returns dict: {'is_success': bool, 'url': str, 'error': str}
     """
-    if not file:
-        return {'is_success': False, 'error': 'Missing file'}
+    if not file or file.filename == '':
+        return {'is_success': False, 'error': 'No file selected'}
 
-    if len(file.read()) > 1_000_000:  # 1MB limit
-        return {'is_success': False, 'error': 'File too large'}
+    # Validate extension
+    allowed = {'png', 'jpg', 'jpeg'}
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in allowed:
+        return {'is_success': False, 'error': 'Only PNG, JPG, and JPEG files are allowed'}
+
+    # Check file size (2MB limit)
+    data = file.read()
+    if len(data) > 2_000_000:
+        return {'is_success': False, 'error': 'File too large (max 2MB)'}
 
     file.seek(0)
     try:
-        result = cloudinary_upload(file)
+        result = cloudinary_upload(file, resource_type='image')
         return {'is_success': True, 'url': result['secure_url']}
     except Exception as e:
         return {'is_success': False, 'error': str(e)}
